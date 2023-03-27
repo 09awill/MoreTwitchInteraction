@@ -25,9 +25,8 @@ namespace KitchenModName
             if (update.Type == "VISIT_DETAILS")
             {
                 ChefVisitDetails chefVisitDetails = JsonUtility.FromJson<ChefVisitDetails>(update.Data);
-                Mod.instance.EntityManager.World.GetExistingSystem<CustomTwitchSystem>().NewOrder("NEW ORDER IS " + chefVisitDetails.Order.ToString());
+                Mod.instance.EntityManager.World.GetExistingSystem<CustomTwitchSystem>().NewOrder(chefVisitDetails);
             }
-            Mod.LogWarning(update.Type);
             return true;
         }
     }
