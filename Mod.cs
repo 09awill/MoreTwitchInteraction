@@ -1,27 +1,33 @@
-﻿using Kitchen;
+﻿using HarmonyLib;
+using Kitchen;
 using Kitchen.ChefConnector;
 using KitchenData;
 using KitchenLib;
 using KitchenLib.Event;
+using KitchenLib.Preferences;
 using KitchenLib.References;
 using KitchenMods;
+using MoreTwitchInteraction;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Reflection;
 using TwitchLib.Client.Interfaces;
 using Unity.Properties;
 using UnityEngine;
 
 // Namespace should have "Kitchen" in the beginning
-namespace KitchenMyMod
+namespace KitchenMoreTwitchInteraction
 {
     public class Mod : BaseMod, IModSystem
     {
         // GUID must be unique and is recommended to be in reverse domain name notation
         // Mod Name is displayed to the player and listed in the mods menu
         // Mod Version must follow semver notation e.g. "1.2.3"
-        public const string MOD_GUID = "com.example.mymod";
-        public const string MOD_NAME = "My Mod";
+        public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
+        public const string MOD_NAME = "More Twitch Interaction";
         public const string MOD_VERSION = "0.1.0";
-        public const string MOD_AUTHOR = "My Name";
+        public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
         // e.g. ">=1.1.3" current and all future
@@ -33,15 +39,22 @@ namespace KitchenMyMod
 #else
         public const bool DEBUG_MODE = false;
 #endif
+        public static Mod Instance;
 
-
-
+        internal static AssetDirectory VanillaAssetDirectory => Instance.AssetDirectory;
         public static AssetBundle Bundle;
+
+        //public static bool DisableWeatherGraphics => PManager.GetPreference<PreferenceInt>("SelectedWeatherStatus").Get() == 1 || PManager.GetPreference<PreferenceInt>("SelectedWeatherStatus").Get() == 2;
+
+
+        public static PreferenceManager PManager;
+
 
         public Mod() : base(MOD_GUID, MOD_NAME, MOD_AUTHOR, MOD_VERSION, MOD_GAMEVERSION, Assembly.GetExecutingAssembly()) { }
 
         protected override void OnInitialise()
         {
+            Instance = this;
             LogWarning($"{MOD_GUID} v{MOD_VERSION} in use!");
         }
 
@@ -58,13 +71,10 @@ namespace KitchenMyMod
             //ResetTwitchNamesAtNight
             //AssignTwitchMenuRequests
             LogInfo("Done loading game data.");
+            //GameObject twitchView = Bundle.LoadAsset<GameObject>("TwitchOption");
+            //twitchView.AddComponent<CustomTwitchOptionView>();
+            //ChefClient
         }
-
-        private void Client_OnChatCommandReceived(object sender, TwitchLib.Client.Events.OnChatCommandReceivedArgs e)
-        {
-            Mod.LogWarning(e.Command.ToString());
-        }
-
         protected override void OnUpdate()
         {
         }
@@ -74,18 +84,38 @@ namespace KitchenMyMod
             // TODO: Uncomment the following if you have an asset bundle.
             // TODO: Also, make sure to set EnableAssetBundleDeploy to 'true' in your ModName.csproj
 
-            // LogInfo("Attempting to load asset bundle...");
-            // Bundle = mod.GetPacks<AssetBundleModPack>().SelectMany(e => e.AssetBundles).First();
-            // LogInfo("Done loading asset bundle.");
+            LogInfo("Attempting to load asset bundle...");
+            Bundle = mod.GetPacks<AssetBundleModPack>().SelectMany(e => e.AssetBundles).First();
+            LogInfo("Done loading asset bundle.");
 
             // Register custom GDOs
             AddGameData();
+
+            PManager = new PreferenceManager(MOD_GUID);
+            PManager.RegisterPreference(new PreferenceInt("SpeedBoostChance", 100));
+            PManager.RegisterPreference(new PreferenceInt("SlowChance", 100));
+            PManager.RegisterPreference(new PreferenceInt("FireChance", 100));
+            PManager.RegisterPreference(new PreferenceBool("OneInteractionPerDay", true));
+
+
+            PManager.Load();
+
+
+            Events.PreferenceMenu_PauseMenu_CreateSubmenusEvent += (s, args) => {
+                args.Menus.Add(typeof(CustomTwitchOrdersMenu<PauseMenuAction>), new CustomTwitchOrdersMenu<PauseMenuAction>(args.Container, args.Module_list));
+            };
+            ModsPreferencesMenu<PauseMenuAction>.RegisterMenu("More Twitch Interactions", typeof(CustomTwitchOrdersMenu<PauseMenuAction>), typeof(PauseMenuAction));
+
+
+
+
 
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
             };
         }
+
         #region Logging
         public static void LogInfo(string _log) { Debug.Log($"[{MOD_NAME}] " + _log); }
         public static void LogWarning(string _log) { Debug.LogWarning($"[{MOD_NAME}] " + _log); }

@@ -2,7 +2,7 @@
 using Kitchen;
 using Kitchen.ChefConnector;
 using Kitchen.ChefConnector.Commands;
-using KitchenMyMod;
+using KitchenMoreTwitchInteraction;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
