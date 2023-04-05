@@ -35,7 +35,6 @@ namespace KitchenMoreTwitchInteraction
                 view.Renderer = view.Container.GetChild("Image").GetComponent<Renderer>();
 
                 view.Text = view.Container.GetChild("Instruction").GetComponent<TextMeshPro>();
-                //Mod.LogWarning("This is the text" + view.Text);
                 return false;
             } else
             {

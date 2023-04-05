@@ -35,26 +35,6 @@ namespace KitchenMoreTwitchInteraction
                 });
 
             }
-            /*
-            using var views = m_DeconstructViewQuery.ToComponentDataArray<CLinkedView>(Allocator.Temp);
-            bool isDay = HasSingleton<SIsDayTime>();
-
-            for (int i = 0; i < views.Length; i++)
-            {
-                var deconstruct = deconstructs[i];
-                var dur = duration[i];
-                SendUpdate(views[i], new DeconstructorView.ViewData
-                {
-                    InUse = deconstruct.InUse,
-                    IsDeconstructed = deconstruct.IsDeconstructed,
-                    HasDeconstructEvent = deconstruct.IsDeconstructed,
-                    IsDay = isDay,
-                    Appliance = deconstruct.ApplianceID,
-                    Deconstructing = dur.Active,
-                    DeconstructionProgress = dur.CurrentChange
-                });
-            }
-            */
         }
     }
 }

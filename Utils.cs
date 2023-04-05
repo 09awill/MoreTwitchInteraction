@@ -51,5 +51,46 @@ namespace MoreTwitchInteraction
                 addValuesAfter = new int[0];
             return addValuesBefore.AddRangeToArray(output.ToArray()).AddRangeToArray(addValuesAfter);
         }
+        public static float[] GenerateFloatArray(string input, out string[] stringRepresentation, float[] addValuesBefore = null, float[] addValuesAfter = null, string prefix = "", string postfix = "")
+        {
+            List<string> stringOutput = new List<string>();
+            List<float> output = new List<float>();
+            string[] ranges = input.Split(',');
+            foreach (string range in ranges)
+            {
+                string[] extents = range.Split('|');
+                float min = Convert.ToInt32(extents[0]);
+                float max;
+                float step;
+                switch (extents.Length)
+                {
+                    case 1:
+                        output.Add(min);
+                        stringOutput.Add($"{prefix}{min}{postfix}");
+                        continue;
+                    case 2:
+                        max = float.Parse(extents[1]);
+                        step = 1;
+                        break;
+                    case 3:
+                        max = float.Parse(extents[1]);
+                        step = float.Parse(extents[2]);
+                        break;
+                    default:
+                        continue;
+                }
+                for (float i = min; i <= max; i += step)
+                {
+                    output.Add(i);
+                    stringOutput.Add($"{prefix}{i}{postfix}");
+                }
+            }
+            stringRepresentation = stringOutput.ToArray();
+            if (addValuesBefore == null)
+                addValuesBefore = new float[0];
+            if (addValuesAfter == null)
+                addValuesAfter = new float[0];
+            return addValuesBefore.AddRangeToArray(output.ToArray()).AddRangeToArray(addValuesAfter);
+        }
     }
 }

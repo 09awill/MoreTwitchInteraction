@@ -17,27 +17,42 @@ namespace MoreTwitchInteraction
 
         public override void Setup(int player_id)
         {
-            AddLabel("Speed Boost Chance : ");
             string[] strings;
-            Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get(), strings.ToList()))
-                .OnChanged += delegate (object _, int value)
-                {
-                    Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Set(value);
+            AddLabel("Enabled : ");
+            Add(new Option<bool>( new List<bool> { false, true }, Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get(), new List<string>() { "Disabled", "Enabled" }))
+                .OnChanged += delegate (object _, bool value) {
+                    Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Set(value);
                     Mod.PManager.Save();
                 };
-
-            New<SpacerElement>();
-
             AddLabel("Slow Chance : ");
             Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get(), strings.ToList()))
                 .OnChanged += delegate (object _, int value)
                 {
                     Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Set(value);
                     Mod.PManager.Save();
+                };           
+            AddLabel("Slow Effect : ");
+            Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SlowEffect").Get(), strings.ToList()))
+                .OnChanged += delegate (object _, int value)
+                {
+                    Mod.PManager.GetPreference<PreferenceInt>("SlowEffect").Set(value);
+                    Mod.PManager.Save();
                 };
-
-            New<SpacerElement>();
-
+            AddLabel("Speed Boost Chance : ");
+            Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get(), strings.ToList()))
+                .OnChanged += delegate (object _, int value)
+                {
+                    Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Set(value);
+                    Mod.PManager.Save();
+                };
+           
+            AddLabel("Speed Effect : ");
+            Add(new Option<int>(Utils.GenerateIntArray("100|300|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedEffect").Get(), strings.ToList()))
+                .OnChanged += delegate (object _, int value)
+                {
+                    Mod.PManager.GetPreference<PreferenceInt>("SpeedEffect").Set(value);
+                    Mod.PManager.Save();
+                };
             AddLabel("Fire Chance : ");
             Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get(), strings.ToList()))
                 .OnChanged += delegate (object _, int value)
@@ -45,18 +60,14 @@ namespace MoreTwitchInteraction
                     Mod.PManager.GetPreference<PreferenceInt>("FireChance").Set(value);
                     Mod.PManager.Save();
                 };
-
-            New<SpacerElement>();
-
-            AddLabel("One interaction per day : ");
-            Add(new Option<bool>(new List<bool>() { false, true }, Mod.PManager.GetPreference<PreferenceBool>("OneInteractionPerDay").Get(), new List<string>() { "Disabled", "Enabled" }))
-                .OnChanged += delegate (object _, bool value)
+            AddLabel("Interactions per day : ");
+            Add(new Option<int>(new List<int>() { 0, 1, 2, 3, 4, 9999 }, Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get(), new List<string>() { "Disabled", "1", "2", "3", "4", "Infinite" }))
+                .OnChanged += delegate (object _, int value)
                 {
-                    Mod.PManager.GetPreference<PreferenceBool>("OneInteractionPerDay").Set(value);
+                    Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Set(value);
                     Mod.PManager.Save();
                 };
 
-            New<SpacerElement>();
             New<SpacerElement>();
             AddButton(Localisation["MENU_BACK_SETTINGS"], delegate { RequestPreviousMenu(); });
         }

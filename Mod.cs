@@ -26,7 +26,7 @@ namespace KitchenMoreTwitchInteraction
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
         public const string MOD_NAME = "More Twitch Interaction";
-        public const string MOD_VERSION = "0.1.0";
+        public const string MOD_VERSION = "0.1.2";
         public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
@@ -92,10 +92,13 @@ namespace KitchenMoreTwitchInteraction
             AddGameData();
 
             PManager = new PreferenceManager(MOD_GUID);
-            PManager.RegisterPreference(new PreferenceInt("SpeedBoostChance", 100));
+            PManager.RegisterPreference(new PreferenceBool("ExtraOptionsEnabled", true));
             PManager.RegisterPreference(new PreferenceInt("SlowChance", 100));
+            PManager.RegisterPreference(new PreferenceInt("SlowEffect", 30));
+            PManager.RegisterPreference(new PreferenceInt("SpeedBoostChance", 100));
+            PManager.RegisterPreference(new PreferenceInt("SpeedEffect", 200));
             PManager.RegisterPreference(new PreferenceInt("FireChance", 100));
-            PManager.RegisterPreference(new PreferenceBool("OneInteractionPerDay", true));
+            PManager.RegisterPreference(new PreferenceInt("InteractionsPerDay", 1));
 
 
             PManager.Load();

@@ -50,8 +50,7 @@ namespace MoreTwitchInteraction
         {
             gameObject.name = "CUSTOM TWITCH OPTION";
             Vector3 localPosition = Container.transform.localPosition;
-
-            localPosition.y = Height * ((float)data.Index - 99);
+            localPosition.y = (Height * ((float)data.Index - 99)) - 0.5f;
             localPosition.x = 17;
             Transform t = Renderer.transform;
             t.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -64,9 +63,7 @@ namespace MoreTwitchInteraction
             {
                 Text.text = $"!order {data.Index}";
                 Renderer.gameObject.SetActive(true);
-
                 Renderer.material.SetTexture(Image, Mod.Bundle.LoadAsset<Texture>(data.Index.ToString()));
-                
             }
         }
     }

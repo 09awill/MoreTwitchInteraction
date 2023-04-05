@@ -28,83 +28,89 @@ namespace KitchenModName
         protected override void Initialise()
         {
             m_PlayerQuery = GetEntityQuery(new QueryHelper().All(typeof(CPlayer)));
-            m_ApplianceQuery = GetEntityQuery(new QueryHelper().All(typeof(CAppliance)).None(typeof(CImmovable), typeof(CPlayer), typeof(CCommandView)));
+            m_ApplianceQuery = GetEntityQuery(new QueryHelper().All(typeof(CAppliance)).None(typeof(CImmovable), typeof(CPlayer), typeof(CCommandView), typeof(CDoesNotOccupy), typeof(CPartOfTableSet)));
             m_OrderQuery = GetEntityQuery(new QueryHelper().All(typeof(CCustomOrder)));
             m_Orders = new Dictionary<string, CCustomOrder>();
-            EntityManager.CreateEntity();
-            //CreateOption(1);
         }
         public void NewOrder(ChefVisitDetails pOrder)
         {
+            if (!Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get()) return;
+            if (Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() < 1) return;
             CCustomOrder ce;
             int DayOfThisOrder= 0;
             if(Require<SDay>(out SDay day))
             {
                 DayOfThisOrder = day.Day;
-                Mod.LogWarning($"Day of this order : {DayOfThisOrder}");
             }
+            bool orderedToday = false;
             if (m_Orders.ContainsKey(pOrder.Name))
             {
-                if (m_Orders[pOrder.Name].DayOfLastOrder == DayOfThisOrder && Mod.PManager.GetPreference<PreferenceBool>("OneInteractionPerDay").Get()) return;
                 if (m_Orders[pOrder.Name].DayOfLastOrder != 0 && m_Orders[pOrder.Name].OrderIndex == pOrder.Order) return;
+                orderedToday = m_Orders[pOrder.Name].DayOfLastOrder == DayOfThisOrder;
+                if (orderedToday && m_Orders[pOrder.Name].OrdersThisDay >= Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get()) return;
                 ce = m_Orders[pOrder.Name];
             }
             ce.OrderIndex = pOrder.Order;
             ce.DayOfLastOrder = DayOfThisOrder;
+            ce.OrdersThisDay = orderedToday ? m_Orders[pOrder.Name].OrdersThisDay + 1 : 1;
+
             m_Orders[pOrder.Name] = ce;
-            Mod.LogWarning(Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get());
-            Mod.LogWarning($"Speed Chance :{(float)Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() / 100f}");
-            Mod.LogWarning($"Slow Chance :{(float)Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() / 100f}");
-            Mod.LogWarning($"Fire Chance :{(float)Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() / 100f}");
 
             switch (pOrder.Order)
             {
                 case 100:
-                    if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get()/100f)
-                    {
-                        using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                        Entity e = players[Random.Range(0, players.Length)];
-                        EntityManager.AddComponent<CSlowPlayer>(e);
-                        CTakesDuration cTakesDuration = new CTakesDuration()
-                        {
-                            Total = m_SpeedBoostDuration,
-                            Active = true,
-                            Remaining = m_SpeedBoostDuration,
-
-                        };
-                        EntityManager.AddComponent<CTakesDuration>(e);
-                        EntityManager.SetComponentData(e, cTakesDuration);
-                        EntityManager.SetComponentData(e, new CSlowPlayer() { Factor = 0.3f, Radius = 1000f });
-                    }
+                    OrderSlow();
                     break;
                 case 101:
-                    if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get()/ 100f)
-                    {
-                        using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                        Entity e = players[Random.Range(0, players.Length)];
-                        EntityManager.AddComponent<CSlowPlayer>(e);
-                        CTakesDuration cTakesDuration = new CTakesDuration()
-                        {
-                            Total = m_SpeedBoostDuration,
-                            Active = true,
-                            Remaining = m_SpeedBoostDuration,
-
-                        };
-                        EntityManager.AddComponent<CTakesDuration>(e);
-                        EntityManager.SetComponentData(e, cTakesDuration);
-                        EntityManager.SetComponentData(e, new CSlowPlayer() { Factor = 3, Radius = 1000f });
-                    }
+                    OrderSpeed();
                     break;
                 case 102:
-                    if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get()/100f)
-                    {
-                        using var apps = m_ApplianceQuery.ToEntityArray(Allocator.Temp);
-                        Entity eA = apps[Random.Range(0, apps.Length)];
-                        EntityManager.AddComponent<CIsOnFire>(eA);
-                    }
+                    OrderFire();
                     break;
                 default:
                     break;
+            }
+        }
+
+        private void OrderSlow()
+        {
+            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() / 100f)
+            {
+                AdjustPlayerSpeed((float)Mod.PManager.GetPreference<PreferenceInt>("SlowEffect").Get()/100);
+            }
+        }
+        private void OrderSpeed()
+        {
+            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() / 100f)
+            {
+                AdjustPlayerSpeed((float)Mod.PManager.GetPreference<PreferenceInt>("SpeedEffect").Get()/100);
+            }
+        }
+
+        private void OrderFire()
+        {
+            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() / 100f)
+            {
+                using var apps = m_ApplianceQuery.ToEntityArray(Allocator.Temp);
+                Entity eA = apps[Random.Range(0, apps.Length)];
+                EntityManager.AddComponent<CIsOnFire>(eA);
+            }
+        }
+        private void AdjustPlayerSpeed(float pFactor)
+        {
+            using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
+            foreach(var p in players) {
+                EntityManager.AddComponent<CSlowPlayer>(p);
+                CTakesDuration cTakesDuration = new CTakesDuration()
+                {
+                    Total = m_SpeedBoostDuration,
+                    Active = true,
+                    Remaining = m_SpeedBoostDuration,
+
+                };
+                EntityManager.AddComponent<CTakesDuration>(p);
+                EntityManager.SetComponentData(p, cTakesDuration);
+                EntityManager.SetComponentData(p, new CSlowPlayer() { Factor = pFactor, Radius = 0.01f });
             }
         }
         protected override void OnUpdate()
@@ -115,7 +121,6 @@ namespace KitchenModName
                 base.EntityManager.AddComponent<CDoNotPersist>(entity);
                 base.EntityManager.AddComponent<CPersistThroughSceneChanges>(entity);
                 m_Orders.Clear();
-                Mod.LogWarning("Resetting Orders");
             }
 
             if (!Has<SPerformSceneTransition>() && !Has<SKitchenMarker>())
@@ -135,7 +140,7 @@ namespace KitchenModName
                     }
                 }
             }
-            if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>())
+            if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>() || !Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get())
             {
                 base.EntityManager.DestroyEntity(m_OrderQuery);
             }
@@ -145,6 +150,7 @@ namespace KitchenModName
                 {
                     return;
                 }
+
                 CreateOption(100);
                 CreateOption(101);
                 CreateOption(102);
@@ -171,10 +177,12 @@ namespace KitchenModName
         {
             public int OrderIndex;
             public int DayOfLastOrder;
+            public int OrdersThisDay;
             public CCustomOrder(int pOrderIndex)
             {
                 OrderIndex = pOrderIndex;
                 DayOfLastOrder = 0;
+                OrdersThisDay = 0;
             }
         }
 
