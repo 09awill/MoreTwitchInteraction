@@ -60,6 +60,13 @@ namespace MoreTwitchInteraction
                     Mod.PManager.GetPreference<PreferenceInt>("FireChance").Set(value);
                     Mod.PManager.Save();
                 };
+            AddLabel("Order 66 Chance : ");
+            Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("MessChance").Get(), strings.ToList()))
+                .OnChanged += delegate (object _, int value)
+                {
+                    Mod.PManager.GetPreference<PreferenceInt>("MessChance").Set(value);
+                    Mod.PManager.Save();
+                };
             AddLabel("Interactions per day : ");
             Add(new Option<int>(new List<int>() { 0, 1, 2, 3, 4, 9999 }, Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get(), new List<string>() { "Disabled", "1", "2", "3", "4", "Infinite" }))
                 .OnChanged += delegate (object _, int value)
