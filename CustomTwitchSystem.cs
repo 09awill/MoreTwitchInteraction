@@ -247,74 +247,70 @@ namespace KitchenModName
             }
             if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>() || !Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get())
             {
-                base.EntityManager.DestroyEntity(m_OrderQuery);
+                EntityManager.DestroyEntity(m_OrderQuery);
+                return;
             }
-            else
+
+            if (Has<SIsDayFirstUpdate>()) return;
+            using NativeArray<CCustomOrder> ord = m_OrderQuery.ToComponentDataArray<CCustomOrder>(Allocator.Temp);
+            using NativeArray<Entity> ordEnts = m_OrderQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < ord.Length; i++)
             {
-                if (Has<SIsDayFirstUpdate>())
+                switch (ord[i].OrderIndex)
                 {
-                    return;
+                    case 100:
+                        if (Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() == 0)
+                        {
+                            base.EntityManager.DestroyEntity(ordEnts[i]);
+                        }
+                        break;
+                    case 101:
+                        if (Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() == 0)
+                        {
+                            base.EntityManager.DestroyEntity(ordEnts[i]);
+                        }
+                        break;
+                    case 102:
+                        if (Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() == 0)
+                        {
+                            base.EntityManager.DestroyEntity(ordEnts[i]);
+                        }
+                        break;
                 }
-                using NativeArray<CCustomOrder> ord = m_OrderQuery.ToComponentDataArray<CCustomOrder>(Allocator.Temp);
-                using NativeArray<Entity> ordEnts = m_OrderQuery.ToEntityArray(Allocator.Temp);
-                for (int i = 0; i < ord.Length; i++)
+            }
+            if (Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() != 0)
+            {
+                if (!ord.Where(ord => ord.OrderIndex == 100).Any())
                 {
-                    switch (ord[i].OrderIndex)
-                    {
-                        case 100:
-                            if (Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() == 0)
-                            {
-                                base.EntityManager.DestroyEntity(ordEnts[i]);
-                            }
-                            break;
-                        case 101:
-                            if (Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() == 0)
-                            {
-                                base.EntityManager.DestroyEntity(ordEnts[i]);
-                            }
-                            break;
-                        case 102:
-                            if (Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() == 0)
-                            {
-                                base.EntityManager.DestroyEntity(ordEnts[i]);
-                            }
-                            break;
-                    }
+                    CreateOption(100);
                 }
-                if (Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() != 0)
+            }
+            if (Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() != 0)
+            {
+                if (!ord.Where(ord => ord.OrderIndex == 101).Any())
                 {
-                    if (!ord.Where(ord => ord.OrderIndex == 100).Any())
-                    {
-                        CreateOption(100);
-                    }
+                    CreateOption(101);
                 }
-                if (Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() != 0)
+            }
+            if (Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() != 0)
+            {
+                if (!ord.Where(ord => ord.OrderIndex == 102).Any())
                 {
-                    if (!ord.Where(ord => ord.OrderIndex == 101).Any())
-                    {
-                        CreateOption(101);
-                    }
-                }
-                if (Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() != 0)
-                {
-                    if (!ord.Where(ord => ord.OrderIndex == 102).Any())
-                    {
-                        CreateOption(102);
-                    }
+                    CreateOption(102);
                 }
             }
         }
 
         private bool CreateOption(int index)
         {
-            Entity entity = base.EntityManager.CreateEntity();
-            base.EntityManager.AddComponentData(entity, new CRequiresView
+            Entity entity = EntityManager.CreateEntity();
+            EntityManager.AddComponentData(entity, new CRequiresView
             {
                 Type = (ViewType)666,
                 ViewMode = ViewMode.Screen
             });
-            base.EntityManager.AddComponentData(entity, new CPosition(new Vector3(0f, 1f, 0f)));
-            base.EntityManager.AddComponentData(entity, new CCustomOrder(index));
+            EntityManager.AddComponentData(entity, new CPosition(new Vector3(0f, 1f, 0f)));
+            EntityManager.AddComponentData(entity, new CCustomOrder(index));
 
             return true;
         }
