@@ -47,10 +47,10 @@ namespace MoreTwitchInteraction
                 };
            
             AddLabel("Speed Effect : ");
-            Add(new Option<int>(Utils.GenerateIntArray("100|300|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedEffect").Get(), strings.ToList()))
+            Add(new Option<int>(Utils.GenerateIntArray("100|300|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostEffect").Get(), strings.ToList()))
                 .OnChanged += delegate (object _, int value)
                 {
-                    Mod.PManager.GetPreference<PreferenceInt>("SpeedEffect").Set(value);
+                    Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostEffect").Set(value);
                     Mod.PManager.Save();
                 };
             AddLabel("Fire Chance : ");
@@ -61,10 +61,10 @@ namespace MoreTwitchInteraction
                     Mod.PManager.Save();
                 };
             AddLabel("Order 66 Chance : ");
-            Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("MessChance").Get(), strings.ToList()))
+            Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("Order66Chance").Get(), strings.ToList()))
                 .OnChanged += delegate (object _, int value)
                 {
-                    Mod.PManager.GetPreference<PreferenceInt>("MessChance").Set(value);
+                    Mod.PManager.GetPreference<PreferenceInt>("Order66Chance").Set(value);
                     Mod.PManager.Save();
                 };
             AddLabel("Interactions per day : ");

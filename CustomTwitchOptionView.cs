@@ -13,6 +13,8 @@ using UnityEngine.VFX;
 using UnityEngine;
 using KitchenLib.Utils;
 using KitchenMoreTwitchInteraction;
+using Unity.Collections;
+using Unity.Entities.UniversalDelegates;
 
 namespace MoreTwitchInteraction
 {
@@ -22,10 +24,14 @@ namespace MoreTwitchInteraction
         public struct ViewData : ISpecificViewData, IViewData, IViewResponseData, IViewData.ICheckForChanges<ViewData>
         {
             [Key(0)]
-            public int Index;
+            public int HeightIndex;
+            [Key(1)]
+            public FixedString128 Name;
+            [Key(1)]
+            public int OrderIndex;
             public bool IsChangedFrom(ViewData check)
             {
-                return Index != check.Index;
+                return HeightIndex != check.HeightIndex || Name != check.Name || OrderIndex != check.OrderIndex;
             }
 
             public IUpdatableObject GetRelevantSubview(IObjectView view)
@@ -50,7 +56,8 @@ namespace MoreTwitchInteraction
         {
             gameObject.name = "CUSTOM TWITCH OPTION";
             Vector3 localPosition = Container.transform.localPosition;
-            localPosition.y = (Height * ((float)data.Index - 99)) - 0.5f;
+            localPosition.y = (Height * ((float)data.HeightIndex + 1)) - 0.5f;
+
             localPosition.x = 17;
             Transform t = Renderer.transform;
             t.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -61,9 +68,9 @@ namespace MoreTwitchInteraction
             Container.transform.localPosition = localPosition;
             if (!(Renderer == null))
             {
-                Text.text = $"!order {data.Index}";
+                Text.text = $"!order {data.OrderIndex}";
                 Renderer.gameObject.SetActive(true);
-                Renderer.material.SetTexture(Image, Mod.Bundle.LoadAsset<Texture>(data.Index.ToString()));
+                Renderer.material.SetTexture(Image, Mod.Bundle.LoadAsset<Texture>(data.Name.ToString()));
             }
         }
     }

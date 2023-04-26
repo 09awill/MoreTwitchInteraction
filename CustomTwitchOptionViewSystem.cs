@@ -20,18 +20,20 @@ namespace KitchenMoreTwitchInteraction
         protected override void Initialise()
         {
             base.Initialise();
-            m_ViewQuery = GetEntityQuery(new QueryHelper().All(typeof(CCustomOrder), typeof(CLinkedView)));
+            m_ViewQuery = GetEntityQuery(new QueryHelper().All(typeof(COption), typeof(CLinkedView)));
         }
         protected override void OnUpdate()
         {
             using var views = m_ViewQuery.ToComponentDataArray<CLinkedView>(Allocator.Temp);
-            using var orders = m_ViewQuery.ToComponentDataArray<CCustomOrder>(Allocator.Temp);
+            using var orders = m_ViewQuery.ToComponentDataArray<COption>(Allocator.Temp);
 
             for (int i = 0; i < views.Length;i++)
             {
                 SendUpdate(views[i], new CustomTwitchOptionView.ViewData()
                 {
-                    Index = orders[i].OrderIndex
+                    HeightIndex = orders[i].HeightIndex,
+                    Name = orders[i].EffectName,
+                    OrderIndex = orders[i].OrderIndex
                 });
 
             }

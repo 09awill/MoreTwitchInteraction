@@ -94,9 +94,9 @@ namespace KitchenMoreTwitchInteraction
             PManager.RegisterPreference(new PreferenceInt("SlowChance", 100));
             PManager.RegisterPreference(new PreferenceInt("SlowEffect", 30));
             PManager.RegisterPreference(new PreferenceInt("SpeedBoostChance", 100));
-            PManager.RegisterPreference(new PreferenceInt("SpeedEffect", 200));
+            PManager.RegisterPreference(new PreferenceInt("SpeedBoostEffect", 200));
             PManager.RegisterPreference(new PreferenceInt("FireChance", 100));
-            PManager.RegisterPreference(new PreferenceInt("MessChance", 5));
+            PManager.RegisterPreference(new PreferenceInt("Order66Chance", 5));
             PManager.RegisterPreference(new PreferenceInt("InteractionsPerDay", 1));
 
 

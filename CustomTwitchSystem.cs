@@ -6,47 +6,52 @@ using UnityEngine;
 using Kitchen.ChefConnector.Commands;
 using KitchenMoreTwitchInteraction;
 using KitchenLib.Preferences;
-using static UnityEngine.UI.GridLayoutGroup;
 using System.Linq;
-using static Kitchen.TwitchNameList;
-using KitchenLib.Systems;
-using KitchenData;
-using Kitchen.Layouts;
-using Unity.Entities.UniversalDelegates;
-using KitchenLib.References;
+
+using MoreTwitchInteraction;
 
 namespace KitchenModName
 {
     internal class CustomTwitchSystem : RestaurantSystem
     {
-        private TwitchNameList nameList;
-        private EntityQuery m_PlayerQuery;
-        private EntityQuery m_ApplianceQuery;
-        private EntityQuery m_OrderQuery;
-        private EntityQuery m_FireQuery;
-        private EntityQuery m_MessQuery;
-        private EntityQuery m_StackableMessQuery;
+        private EntityQuery m_OptionsQuery;
+        CustomEffects.CustomEffect[] m_Effects = new CustomEffects.CustomEffect[]
+        {
+            new CustomEffects.Order66(),
+            new CustomEffects.SpeedBoost(),
+            new CustomEffects.Slow(),
+            new CustomEffects.Fire(),
+            new CustomEffects.CleanMess(),
+            new CustomEffects.SOS(),
+        };
 
-
-
-        private float m_CoolDown = 60f;
-        private float m_SpeedBoostDuration = 5f;
-
-        //private Dictionary<Entity, TwitchCustomerData> data;
         private Dictionary<string, CCustomOrder> m_Orders;
+        private Dictionary<int, COption> m_Options;
         protected override void Initialise()
         {
-            m_PlayerQuery = GetEntityQuery(new QueryHelper().All(typeof(CPlayer)));
-            m_ApplianceQuery = GetEntityQuery(new QueryHelper().All(typeof(CAppliance)).None(typeof(CImmovable), typeof(CPlayer), typeof(CCommandView), typeof(CDoesNotOccupy), typeof(CPartOfTableSet)));
-            m_OrderQuery = GetEntityQuery(new QueryHelper().All(typeof(CCustomOrder)));
-            m_FireQuery = GetEntityQuery(new QueryHelper().All(typeof(CIsOnFire)));
-            m_MessQuery = GetEntityQuery(new QueryHelper().All(typeof(CMess)));
-            m_StackableMessQuery = GetEntityQuery(new QueryHelper().All(typeof(CStackableMess)));
+            m_Options = new Dictionary<int, COption>();
+            for (int i = 0; i < m_Effects.Length; i++)
+            {
+                Mod.LogWarning(m_Effects[i].Name);
+                if (m_Effects[i].HasChance && Mod.PManager.GetPreference<PreferenceInt>(m_Effects[i].Name + "Chance").Get() == 0) continue;
+
+                QueryHelper[] helpers = m_Effects[i].GetQueryHelpers();
+
+                EntityQuery[] queries = new EntityQuery[helpers.Length];
+                for (int j = 0; j < helpers.Length; j++)
+                {
+                    queries[j] = GetEntityQuery(helpers[j]);
+                }
+
+                m_Effects[i].Initialise(EntityManager, queries);
 
 
-            //ConstantMess
-            //CreateNewMesses
+                m_Options.Add(m_Effects[i].OrderIndex, new COption() { HeightIndex = i, EffectName = m_Effects[i].Name });
+
+            }
+
             m_Orders = new Dictionary<string, CCustomOrder>();
+            m_OptionsQuery = GetEntityQuery(new QueryHelper().All(typeof(COption)));
         }
         public void NewOrder(ChefVisitDetails pOrder)
         {
@@ -56,168 +61,30 @@ namespace KitchenModName
                 if (!Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get()) return;
                 if (Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() < 1) return;
             }
+            if (!m_Options.ContainsKey(pOrder.Order)) return;
             CCustomOrder ce;
-            int DayOfThisOrder= 0;
-            if(Require<SDay>(out SDay day))
+            int DayOfThisOrder = 0;
+            if (Require<SDay>(out SDay day))
             {
                 DayOfThisOrder = day.Day;
             }
             bool orderedToday = false;
             if (m_Orders.ContainsKey(pOrder.Name))
             {
-                if (m_Orders[pOrder.Name].DayOfLastOrder != 0 && m_Orders[pOrder.Name].OrderIndex == pOrder.Order) return;
+                if (m_Orders[pOrder.Name].DayOfLastOrder != 0 && m_Orders[pOrder.Name].OrderID == m_Options[pOrder.Order].EffectName) return;
                 orderedToday = m_Orders[pOrder.Name].DayOfLastOrder == DayOfThisOrder;
                 if (orderedToday && m_Orders[pOrder.Name].OrdersThisDay >= Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() && pOrder.Name != "madvion") return;
                 ce = m_Orders[pOrder.Name];
             }
-            ce.OrderIndex = pOrder.Order;
             ce.DayOfLastOrder = DayOfThisOrder;
             ce.OrdersThisDay = orderedToday ? m_Orders[pOrder.Name].OrdersThisDay + 1 : 1;
-
+            ce.OrderID = m_Options[pOrder.Order].EffectName;
             m_Orders[pOrder.Name] = ce;
-
-            switch (pOrder.Order)
-            {
-                case 66:
-                    Order66();
-                    break;
-                case 69:
-                    if (pOrder.Name == "madvion")
-                    {
-                        OrderCleanMess();
-                    }
-                    break;
-                case 100:
-                    OrderSlow();
-                    break;
-                case 101:
-                    OrderSpeed();
-                    break;
-                case 102:
-                    OrderFire();
-                    break;
-                case 911:
-                    OrderSOS();
-                    break;
-                default:
-                    break;
-            }
+            CustomEffects.CustomEffect effect = m_Effects.Where(e => e.Name == m_Options[pOrder.Order].EffectName).First();
+            if (effect.MadvionOnly && pOrder.Name != "madvion") return;
+            effect.Order();
         }
 
-        private void OrderCleanMess()
-        {
-            EntityManager.DestroyEntity(m_MessQuery);
-            EntityManager.DestroyEntity(m_StackableMessQuery);
-            CSoundEvent.Create(base.EntityManager, SoundEvent.MopWater);
-        }
-
-        private void Order66()
-        {
-            if (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>("MessChance").Get() / 100f) return;
-
-            using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-            foreach (var p in players)
-            {
-                CookItemInHand(p);
-                CreateMessAroundPlayer(p);
-            }
-        }
-
-        private void CreateMessAroundPlayer(Entity p)
-        {
-            if (!EntityManager.RequireComponent<CPosition>(p, out CPosition pos)) return;
-            // Define the radius of the area you want to search around the position
-            float searchRadius = 2;
-
-            // Get the integer coordinates of the position
-            int x = Mathf.RoundToInt(pos.Position.x);
-            int z = Mathf.RoundToInt(pos.Position.z);
-            foreach (var nearby in LayoutHelpers.AllNearbyRange2)
-            {
-                var relPos = new Vector2(pos.Position.x + nearby.x, pos.Position.z + nearby.y);
-                float distance = Vector2.Distance(new Vector2(x, z), relPos);
-                if (distance <= searchRadius)
-                {
-                    Entity ent = base.EntityManager.CreateEntity();
-                    base.EntityManager.AddComponentData(ent, new CPosition(new Vector3(relPos.x, 0, relPos.y)));
-                    base.EntityManager.AddComponentData(ent, new CMessRequest
-                    {
-                        ID = AssetReference.CustomerMess
-                    });
-                    // Do something with the tile at (i, j)
-                }
-            }
-            CSoundEvent.Create(base.EntityManager, SoundEvent.MessCreated);
-        }
-
-        private void CookItemInHand(Entity p)
-        {
-            //Check there is an item in the players hand
-            if (!EntityManager.RequireComponent(p, out CItemHolder holder)) return;
-            if (holder.HeldItem == default) return;
-            if (!EntityManager.RequireComponent(holder.HeldItem, out CItem item)) return;
-            GameDataObject gdo = GameData.Main.Get(item.ID);
-            if (gdo == null) return;
-            Item itemObj = gdo as Item;
-            if (itemObj == null) return;
-
-            foreach (var process in itemObj.DerivedProcesses)
-            {
-                if (process.Process.ID == ProcessReferences.Cook)
-                {
-                    EntityManager.DestroyEntity(holder.HeldItem);
-                    Entity ent = EntityManager.CreateEntity();
-                    Set(ent, new CCreateItem() { ID = process.Result.ID, Holder = p });
-                }
-            }
-        }
-
-        private void OrderSOS()
-        {
-            EntityManager.RemoveComponent<CIsOnFire>(m_FireQuery);
-        }
-
-        private void OrderSlow()
-        {
-            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() / 100f)
-            {
-                AdjustPlayerSpeed((float)Mod.PManager.GetPreference<PreferenceInt>("SlowEffect").Get()/100);
-            }
-        }
-        private void OrderSpeed()
-        {
-            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() / 100f)
-            {
-                AdjustPlayerSpeed((float)Mod.PManager.GetPreference<PreferenceInt>("SpeedEffect").Get()/100);
-            }
-        }
-
-        private void OrderFire()
-        {
-            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() / 100f)
-            {
-                using var apps = m_ApplianceQuery.ToEntityArray(Allocator.Temp);
-                Entity eA = apps[Random.Range(0, apps.Length)];
-                EntityManager.AddComponent<CIsOnFire>(eA);
-            }
-        }
-        private void AdjustPlayerSpeed(float pFactor)
-        {
-            using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-            foreach(var p in players) {
-                EntityManager.AddComponent<CSlowPlayer>(p);
-                CTakesDuration cTakesDuration = new CTakesDuration()
-                {
-                    Total = m_SpeedBoostDuration,
-                    Active = true,
-                    Remaining = m_SpeedBoostDuration,
-
-                };
-                EntityManager.AddComponent<CTakesDuration>(p);
-                EntityManager.SetComponentData(p, cTakesDuration);
-                EntityManager.SetComponentData(p, new CSlowPlayer() { Factor = pFactor, Radius = 0.01f });
-            }
-        }
         protected override void OnUpdate()
         {
             if (Has<SKitchenMarker>() && !Has<SResetCustomOrders>())
@@ -232,76 +99,87 @@ namespace KitchenModName
             {
                 Clear<SResetCustomOrders>();
             }
-            using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-            foreach (var player in players)
-            {
-                if (Require(player, out CTakesDuration duration))
-                {
-                    //Debug.Log("Duration remaining : " + duration.Remaining);
-                    if (duration.Remaining < 0.1f)
-                    {
-                        EntityManager.RemoveComponent<CTakesDuration>(player);
-                        EntityManager.RemoveComponent<CSlowPlayer>(player);
-                    }
-                }
-            }
+
             if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>() || !Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get())
             {
-                EntityManager.DestroyEntity(m_OrderQuery);
+                EntityManager.DestroyEntity(m_OptionsQuery);
                 return;
             }
 
             if (Has<SIsDayFirstUpdate>()) return;
-            using NativeArray<CCustomOrder> ord = m_OrderQuery.ToComponentDataArray<CCustomOrder>(Allocator.Temp);
-            using NativeArray<Entity> ordEnts = m_OrderQuery.ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < ord.Length; i++)
-            {
-                switch (ord[i].OrderIndex)
-                {
-                    case 100:
-                        if (Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() == 0)
-                        {
-                            base.EntityManager.DestroyEntity(ordEnts[i]);
-                        }
-                        break;
-                    case 101:
-                        if (Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() == 0)
-                        {
-                            base.EntityManager.DestroyEntity(ordEnts[i]);
-                        }
-                        break;
-                    case 102:
-                        if (Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() == 0)
-                        {
-                            base.EntityManager.DestroyEntity(ordEnts[i]);
-                        }
-                        break;
-                }
-            }
-            if (Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get() != 0)
-            {
-                if (!ord.Where(ord => ord.OrderIndex == 100).Any())
-                {
-                    CreateOption(100);
-                }
-            }
-            if (Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get() != 0)
-            {
-                if (!ord.Where(ord => ord.OrderIndex == 101).Any())
-                {
-                    CreateOption(101);
-                }
-            }
-            if (Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get() != 0)
-            {
-                if (!ord.Where(ord => ord.OrderIndex == 102).Any())
-                {
-                    CreateOption(102);
-                }
-            }
-        }
 
-        private bool CreateOption(int index)
+            using NativeArray<Entity> options = m_OptionsQuery.ToEntityArray(Allocator.Temp);
+
+
+            for (int i = 0; i < m_Effects.Length; i++)
+            {
+                if (m_Options.Values.Where(e => e.EffectName == m_Effects[i].Name).Any())
+                {
+                    
+                    if (!m_Effects[i].HasChance || Mod.PManager.GetPreference<PreferenceInt>(m_Effects[i].Name + "Chance").Get() == 0)
+                    {
+                        //Destroy entity and remove from Options or Just remove from options
+                        List<Entity> entities = options.Where(e =>
+                        {
+                            if (Require(e, out COption option))
+                            {
+                                return option.EffectName == m_Effects[i].Name;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }).ToList();
+                        for (int j = entities.Count -1; j >= 0; j--)
+                        {
+                            EntityManager.DestroyEntity(entities[j]);
+                        }
+                        entities = null;
+                    } else
+                    {
+                        m_Effects[i].Update();
+                        if (!m_Effects[i].ShowUI) continue;
+                        bool exists = options.Where(e =>
+                        {
+                            if (Require(e, out COption option))
+                            {
+                                return option.EffectName == m_Effects[i].Name;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }).Any();
+                        if(!exists)CreateOption(99, m_Effects[i]);
+
+                        //Create Option Entity
+                    }
+                } else
+                {
+                    //Initialise, Create option and add to Options
+                    QueryHelper[] helpers = m_Effects[i].GetQueryHelpers();
+                    EntityQuery[] queries = new EntityQuery[helpers.Length];
+                    for (int j = 0; j < helpers.Length; j++)
+                    {
+                        queries[j] = GetEntityQuery(helpers[j]);
+                    }
+                    m_Effects[i].Initialise(EntityManager, queries);
+                    m_Options.Add(m_Effects[i].OrderIndex, new COption() { HeightIndex = i, EffectName = m_Effects[i].Name});
+                }
+
+            }
+            using NativeArray<Entity> optionsEntities = m_OptionsQuery.ToEntityArray(Allocator.Temp);
+            using NativeArray<COption> optionsComponents = m_OptionsQuery.ToComponentDataArray<COption>(Allocator.Temp);
+
+            for (int i = 0; i < optionsEntities.Length; i++)
+            {
+                COption opt = optionsComponents[i];
+                opt.HeightIndex = i;
+                EntityManager.SetComponentData(optionsEntities[i], opt);
+            }
+
+        }
+        private Entity CreateOption(int pIndex, CustomEffects.CustomEffect pEffect )
         {
             Entity entity = EntityManager.CreateEntity();
             EntityManager.AddComponentData(entity, new CRequiresView
@@ -310,20 +188,32 @@ namespace KitchenModName
                 ViewMode = ViewMode.Screen
             });
             EntityManager.AddComponentData(entity, new CPosition(new Vector3(0f, 1f, 0f)));
-            EntityManager.AddComponentData(entity, new CCustomOrder(index));
+            EntityManager.AddComponentData(entity, new COption(pIndex, pEffect.Name, pEffect.OrderIndex));
 
-            return true;
+            return entity;
         }
 
+        public struct COption : IComponentData
+        {
+            public FixedString128 EffectName;
+            public int HeightIndex;
+            public int OrderIndex;
+            public COption(int pHeightIndex, FixedString128 pEffectName, int pOrderIndex)
+            {
+                HeightIndex = pHeightIndex;
+                EffectName = pEffectName;
+                OrderIndex = pOrderIndex;
+            }
+        }
 
         public struct CCustomOrder : IComponentData
         {
-            public int OrderIndex;
+            public FixedString128 OrderID;
             public int DayOfLastOrder;
             public int OrdersThisDay;
-            public CCustomOrder(int pOrderIndex)
+            public CCustomOrder(string pOrderID)
             {
-                OrderIndex = pOrderIndex;
+                OrderID = pOrderID;
                 DayOfLastOrder = 0;
                 OrdersThisDay = 0;
             }
