@@ -79,7 +79,7 @@ namespace KitchenModName
             switch (pOrder.Order)
             {
                 case 66:
-                    OrderMess();
+                    Order66();
                     break;
                 case 69:
                     if (pOrder.Name == "madvion")
@@ -111,67 +111,63 @@ namespace KitchenModName
             CSoundEvent.Create(base.EntityManager, SoundEvent.MopWater);
         }
 
-        private void OrderMess()
+        private void Order66()
         {
-            if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>("MessChance").Get() / 100f)
+            if (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>("MessChance").Get() / 100f) return;
+
+            using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
+            foreach (var p in players)
             {
-                using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                foreach (var p in players)
+                CookItemInHand(p);
+                CreateMessAroundPlayer(p);
+            }
+        }
+
+        private void CreateMessAroundPlayer(Entity p)
+        {
+            if (!EntityManager.RequireComponent<CPosition>(p, out CPosition pos)) return;
+            // Define the radius of the area you want to search around the position
+            float searchRadius = 2;
+
+            // Get the integer coordinates of the position
+            int x = Mathf.RoundToInt(pos.Position.x);
+            int z = Mathf.RoundToInt(pos.Position.z);
+            foreach (var nearby in LayoutHelpers.AllNearbyRange2)
+            {
+                var relPos = new Vector2(pos.Position.x + nearby.x, pos.Position.z + nearby.y);
+                float distance = Vector2.Distance(new Vector2(x, z), relPos);
+                if (distance <= searchRadius)
                 {
-                    if (EntityManager.RequireComponent<CItemHolder>(p, out CItemHolder holder))
+                    Entity ent = base.EntityManager.CreateEntity();
+                    base.EntityManager.AddComponentData(ent, new CPosition(new Vector3(relPos.x, 0, relPos.y)));
+                    base.EntityManager.AddComponentData(ent, new CMessRequest
                     {
-                        if (holder.HeldItem != default)
-                        {
-                            if(EntityManager.RequireComponent<CItem>(holder.HeldItem, out CItem item))
-                            {
-                                GameDataObject gdo = GameData.Main.Get(item.ID);
-                                if(gdo != null)
-                                {
-                                    Item itemObj = gdo as Item;
-                                    if(itemObj != null)
-                                    {
-                                        foreach (var process in itemObj.DerivedProcesses)
-                                        {
-                                            if(process.Process.ID == ProcessReferences.Cook)
-                                            {
-                                                EntityManager.DestroyEntity(holder.HeldItem);
-                                                Entity ent = EntityManager.CreateEntity();
-                                                Set(ent, new CCreateItem() { ID = process.Result.ID, Holder = p });
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        ID = AssetReference.CustomerMess
+                    });
+                    // Do something with the tile at (i, j)
+                }
+            }
+            CSoundEvent.Create(base.EntityManager, SoundEvent.MessCreated);
+        }
 
+        private void CookItemInHand(Entity p)
+        {
+            //Check there is an item in the players hand
+            if (!EntityManager.RequireComponent(p, out CItemHolder holder)) return;
+            if (holder.HeldItem == default) return;
+            if (!EntityManager.RequireComponent(holder.HeldItem, out CItem item)) return;
+            GameDataObject gdo = GameData.Main.Get(item.ID);
+            if (gdo == null) return;
+            Item itemObj = gdo as Item;
+            if (itemObj == null) return;
 
-                        }
-                    }
-
-                    if (EntityManager.RequireComponent<CPosition>(p, out CPosition pos))
-                    {
-                        // Define the radius of the area you want to search around the position
-                        float searchRadius = 2;
-
-                        // Get the integer coordinates of the position
-                        int x = Mathf.RoundToInt(pos.Position.x);
-                        int z = Mathf.RoundToInt(pos.Position.z);
-                        foreach (var nearby in LayoutHelpers.AllNearbyRange2)
-                        {
-                            var relPos = new Vector2(pos.Position.x + nearby.x, pos.Position.z + nearby.y);
-                            float distance = Vector2.Distance(new Vector2(x, z), relPos);
-                            if (distance <= searchRadius)
-                            {
-                                Entity ent = base.EntityManager.CreateEntity();
-                                base.EntityManager.AddComponentData(ent, new CPosition(new Vector3(relPos.x, 0, relPos.y)));
-                                base.EntityManager.AddComponentData(ent, new CMessRequest
-                                {
-                                    ID = AssetReference.CustomerMess
-                                });
-                                // Do something with the tile at (i, j)
-                            }
-                        }
-                        CSoundEvent.Create(base.EntityManager, SoundEvent.MessCreated);
-                    }
+            foreach (var process in itemObj.DerivedProcesses)
+            {
+                if (process.Process.ID == ProcessReferences.Cook)
+                {
+                    EntityManager.DestroyEntity(holder.HeldItem);
+                    Entity ent = EntityManager.CreateEntity();
+                    Set(ent, new CCreateItem() { ID = process.Result.ID, Holder = p });
                 }
             }
         }
