@@ -187,7 +187,7 @@ namespace KitchenModName
                 Type = (ViewType)666,
                 ViewMode = ViewMode.Screen
             });
-            EntityManager.AddComponentData(entity, new CPosition(new Vector3(0f, 1f, 0f)));
+            EntityManager.AddComponentData(entity, new CPosition(new Vector3(1f, 1f, 0f)));
             EntityManager.AddComponentData(entity, new COption(pIndex, pEffect.Name, pEffect.OrderIndex));
 
             return entity;

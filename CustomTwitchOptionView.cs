@@ -26,8 +26,8 @@ namespace MoreTwitchInteraction
             [Key(0)]
             public int HeightIndex;
             [Key(1)]
-            public FixedString128 Name;
-            [Key(1)]
+            public string Name;
+            [Key(2)]
             public int OrderIndex;
             public bool IsChangedFrom(ViewData check)
             {
@@ -57,8 +57,7 @@ namespace MoreTwitchInteraction
             gameObject.name = "CUSTOM TWITCH OPTION";
             Vector3 localPosition = Container.transform.localPosition;
             localPosition.y = (Height * ((float)data.HeightIndex + 1)) - 0.5f;
-
-            localPosition.x = 17;
+            localPosition.x = - 0.8f;
             Transform t = Renderer.transform;
             t.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             t.localPosition = new Vector3(t.localPosition.x, -0.2f, t.localPosition.z);
@@ -72,6 +71,7 @@ namespace MoreTwitchInteraction
                 Renderer.gameObject.SetActive(true);
                 Renderer.material.SetTexture(Image, Mod.Bundle.LoadAsset<Texture>(data.Name.ToString()));
             }
+            Data = data;
         }
     }
 }

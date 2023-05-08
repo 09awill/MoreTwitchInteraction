@@ -6,6 +6,7 @@ using MoreTwitchInteraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
@@ -16,13 +17,16 @@ namespace KitchenMoreTwitchInteraction
     [HarmonyPatch]
     internal class LocalViewRouterPatch
     {
+        private static MethodInfo GetPrefabMethod = ReflectionUtils.GetMethod<LocalViewRouter>("GetPrefab");
+
         [HarmonyPatch(typeof(LocalViewRouter), "GetPrefab", new Type[] { typeof(ViewType) })]
         [HarmonyPrefix]
-        static bool GetPrefab_Prefix(ref GameObject __result, ViewType view_type)
+        static bool GetPrefab_Prefix(ref GameObject __result, ref LocalViewRouter __instance, ViewType view_type)
         {
             if (view_type == (ViewType)666)
             {
-                __result = Mod.VanillaAssetDirectory.ViewPrefabs[ViewType.TwitchOrderOption];
+                __result = (GameObject)GetPrefabMethod.Invoke(__instance, new object[] { ViewType.TwitchOrderOption });
+                //__result = Mod.VanillaAssetDirectory.ViewPrefabs[ViewType.TwitchOrderOption];
                 if(__result.TryGetComponent(out TwitchOptionsView twitchOptionsView))
                 {
                     twitchOptionsView.enabled = false;
@@ -32,8 +36,8 @@ namespace KitchenMoreTwitchInteraction
 
                 view.Container = __result.GetChild("Container");
 
-                view.Renderer = view.Container.GetChild("Image").GetComponent<Renderer>();
 
+                view.Renderer = view.Container.GetChild("Image").GetComponent<Renderer>();
                 view.Text = view.Container.GetChild("Instruction").GetComponent<TextMeshPro>();
                 return false;
             } else
