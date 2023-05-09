@@ -24,6 +24,12 @@ namespace MoreTwitchInteraction
                     Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Set(value);
                     Mod.PManager.Save();
                 };
+            AddLabel("Show UI : ");
+            Add(new Option<bool>(new List<bool> { false, true }, Mod.PManager.GetPreference<PreferenceBool>("ShowUI").Get(), new List<string>() { "Disabled", "Enabled" }))
+                .OnChanged += delegate (object _, bool value) {
+                    Mod.PManager.GetPreference<PreferenceBool>("ShowUI").Set(value);
+                    Mod.PManager.Save();
+                };
             AddLabel("Slow Chance : ");
             Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get(), strings.ToList()))
                 .OnChanged += delegate (object _, int value)

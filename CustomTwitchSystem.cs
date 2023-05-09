@@ -115,44 +115,35 @@ namespace KitchenModName
             {
                 if (m_Options.Values.Where(e => e.EffectName == m_Effects[i].Name).Any())
                 {
-                    
-                    if (!m_Effects[i].HasChance || Mod.PManager.GetPreference<PreferenceInt>(m_Effects[i].Name + "Chance").Get() == 0)
+
+                    bool shouldShowUI = (m_Effects[i].HasChance && Mod.PManager.GetPreference<PreferenceInt>(m_Effects[i].Name + "Chance").Get() != 0) && m_Effects[i].ShowUI && Mod.PManager.GetPreference<PreferenceBool>("ShowUI").Get();
+                    List<Entity> entities = options.Where(e =>
                     {
-                        //Destroy entity and remove from Options or Just remove from options
-                        List<Entity> entities = options.Where(e =>
+                        if (Require(e, out COption option))
                         {
-                            if (Require(e, out COption option))
-                            {
-                                return option.EffectName == m_Effects[i].Name;
-                            }
-                            else
-                            {
-                                return false;
-                            }
-                        }).ToList();
-                        for (int j = entities.Count -1; j >= 0; j--)
-                        {
-                            EntityManager.DestroyEntity(entities[j]);
+                            return option.EffectName == m_Effects[i].Name;
                         }
-                        entities = null;
-                    } else
+                        else
+                        {
+                            return false;
+                        }
+                    }).ToList();
+                    if (shouldShowUI)
                     {
                         m_Effects[i].Update();
-                        if (!m_Effects[i].ShowUI) continue;
-                        bool exists = options.Where(e =>
+                        if(!entities.Any()) CreateOption(99, m_Effects[i]);
+                    }
+                    else
+                    {
+                        if (entities.Any())
                         {
-                            if (Require(e, out COption option))
+                            for (int j = entities.Count - 1; j >= 0; j--)
                             {
-                                return option.EffectName == m_Effects[i].Name;
+                                EntityManager.DestroyEntity(entities[j]);
                             }
-                            else
-                            {
-                                return false;
-                            }
-                        }).Any();
-                        if(!exists)CreateOption(99, m_Effects[i]);
+                            entities = null;
+                        }
 
-                        //Create Option Entity
                     }
                 } else
                 {

@@ -30,6 +30,7 @@ namespace KitchenMoreTwitchInteraction
                 if(__result.TryGetComponent(out TwitchOptionsView twitchOptionsView))
                 {
                     twitchOptionsView.enabled = false;
+                    //GameObject.Destroy(twitchOptionsView);
                 }
                 CustomTwitchOptionView view = __result.GetComponent<CustomTwitchOptionView>();
                 if(view == null) view = __result.AddComponent<CustomTwitchOptionView>();

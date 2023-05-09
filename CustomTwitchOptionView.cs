@@ -21,7 +21,7 @@ namespace MoreTwitchInteraction
     internal class CustomTwitchOptionView : UpdatableObjectView<CustomTwitchOptionView.ViewData>
     {
         [MessagePackObject(false)]
-        public struct ViewData : ISpecificViewData, IViewData, IViewResponseData, IViewData.ICheckForChanges<ViewData>
+        public struct ViewData : ISpecificViewData, IViewData, IViewData.ICheckForChanges<ViewData>
         {
             [Key(0)]
             public int HeightIndex;
