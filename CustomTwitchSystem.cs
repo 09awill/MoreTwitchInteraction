@@ -102,6 +102,10 @@ namespace KitchenModName
 
             if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>() || !Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get())
             {
+                for (int i = 0; i < m_Effects.Length; i++)
+                {
+                    m_Effects[i].NightUpdate();
+                }
                 EntityManager.DestroyEntity(m_OptionsQuery);
                 return;
             }
@@ -130,7 +134,6 @@ namespace KitchenModName
                     }).ToList();
                     if (shouldShowUI)
                     {
-                        m_Effects[i].Update();
                         if(!entities.Any()) CreateOption(99, m_Effects[i]);
                     }
                     else
@@ -145,6 +148,7 @@ namespace KitchenModName
                         }
 
                     }
+                    m_Effects[i].Update();
                 } else
                 {
                     //Initialise, Create option and add to Options

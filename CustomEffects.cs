@@ -31,6 +31,22 @@ namespace MoreTwitchInteraction
                 pEntityManager.SetComponentData(p, new CSlowPlayer() { Factor = pFactor, Radius = 0.01f });
             }
         }
+        private static void CheckRemovePlayerSpeedModifiers(EntityManager pEntityManager, NativeArray<Entity> pPlayers)
+        {
+            foreach (var player in pPlayers)
+            {
+                if (pEntityManager.HasComponent<CTakesDuration>(player))
+                {
+                    CTakesDuration duration = pEntityManager.GetComponentData<CTakesDuration>(player);
+                    //Debug.Log("Duration remaining : " + duration.Remaining);
+                    if (duration.Remaining < 0.1f)
+                    {
+                        pEntityManager.RemoveComponent<CTakesDuration>(player);
+                        pEntityManager.RemoveComponent<CSlowPlayer>(player);
+                    }
+                }
+            }
+        }
         public interface CustomEffect
         {
             public string Name { get; }
@@ -42,6 +58,10 @@ namespace MoreTwitchInteraction
             public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries);
             public void Update();
             public void Order();
+            /// <summary>
+            /// Should be used to clean up effect at night
+            /// </summary>
+            public void NightUpdate();
 
         }
         public class Order66 : CustomEffect
@@ -133,6 +153,11 @@ namespace MoreTwitchInteraction
             {
                 return;
             }
+
+            public void NightUpdate()
+            {
+                return;
+            }
         }
         public class SpeedBoost : CustomEffect
         {
@@ -170,71 +195,13 @@ namespace MoreTwitchInteraction
             public void Update()
             {
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                foreach (var player in players)
-                {
-                    if (m_EManager.HasComponent<CTakesDuration>(player))
-                    {
-                        CTakesDuration duration = m_EManager.GetComponentData<CTakesDuration>(player);
-                        //Debug.Log("Duration remaining : " + duration.Remaining);
-                        if (duration.Remaining < 0.1f)
-                        {
-                            m_EManager.RemoveComponent<CTakesDuration>(player);
-                            m_EManager.RemoveComponent<CSlowPlayer>(player);
-                        }
-                    }
-                }
+                CheckRemovePlayerSpeedModifiers(m_EManager, players);
             }
-
-            private void CreateMessAroundPlayer(Entity p)
+            public void NightUpdate()
             {
-                if (!m_EManager.RequireComponent(p, out CPosition pos)) return;
-                // Define the radius of the area you want to search around the position
-                float searchRadius = 2;
-
-                // Get the integer coordinates of the position
-                int x = Mathf.RoundToInt(pos.Position.x);
-                int z = Mathf.RoundToInt(pos.Position.z);
-                foreach (var nearby in LayoutHelpers.AllNearbyRange2)
-                {
-                    var relPos = new Vector2(pos.Position.x + nearby.x, pos.Position.z + nearby.y);
-                    float distance = Vector2.Distance(new Vector2(x, z), relPos);
-                    if (distance <= searchRadius)
-                    {
-                        Entity ent = m_EManager.CreateEntity();
-                        m_EManager.AddComponentData(ent, new CPosition(new Vector3(relPos.x, 0, relPos.y)));
-                        m_EManager.AddComponentData(ent, new CMessRequest
-                        {
-                            ID = AssetReference.CustomerMess
-                        });
-                        // Do something with the tile at (i, j)
-                    }
-                }
-                CSoundEvent.Create(m_EManager, SoundEvent.MessCreated);
+                using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
+                CheckRemovePlayerSpeedModifiers(m_EManager, players);
             }
-
-            private void CookItemInHand(Entity p)
-            {
-                //Check there is an item in the players hand
-                if (!m_EManager.RequireComponent(p, out CItemHolder holder)) return;
-                if (holder.HeldItem == default) return;
-                if (!m_EManager.RequireComponent(holder.HeldItem, out CItem item)) return;
-                GameDataObject gdo = GameData.Main.Get(item.ID);
-                if (gdo == null) return;
-                Item itemObj = gdo as Item;
-                if (itemObj == null) return;
-
-                foreach (var process in itemObj.DerivedProcesses)
-                {
-                    if (process.Process.ID == ProcessReferences.Cook)
-                    {
-                        m_EManager.DestroyEntity(holder.HeldItem);
-                        Entity ent = m_EManager.CreateEntity();
-                        m_EManager.AddComponentData(ent, new CCreateItem());
-                        m_EManager.SetComponentData(ent, new CCreateItem() { ID = process.Result.ID, Holder = p });
-                    }
-                }
-            }
-
         }
         public class Slow : CustomEffect
         {
@@ -270,19 +237,12 @@ namespace MoreTwitchInteraction
             public void Update()
             {
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                foreach (var player in players)
-                {
-                    if (m_EManager.HasComponent<CTakesDuration>(player))
-                    {
-                        CTakesDuration duration = m_EManager.GetComponentData<CTakesDuration>(player);
-                        //Debug.Log("Duration remaining : " + duration.Remaining);
-                        if (duration.Remaining < 0.1f)
-                        {
-                            m_EManager.RemoveComponent<CTakesDuration>(player);
-                            m_EManager.RemoveComponent<CSlowPlayer>(player);
-                        }
-                    }
-                }
+                CheckRemovePlayerSpeedModifiers(m_EManager, players);
+            }
+            public void NightUpdate()
+            {
+                using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
+                CheckRemovePlayerSpeedModifiers(m_EManager, players);
             }
 
         }
@@ -315,6 +275,10 @@ namespace MoreTwitchInteraction
                 m_EManager.RemoveComponent<CIsOnFire>(m_FiresQuery);
             }
             public void Update()
+            {
+                return;
+            }
+            public void NightUpdate()
             {
                 return;
             }
@@ -354,6 +318,10 @@ namespace MoreTwitchInteraction
             {
                 return;
             }
+            public void NightUpdate()
+            {
+                return;
+            }
 
 
         }
@@ -389,6 +357,10 @@ namespace MoreTwitchInteraction
                 CSoundEvent.Create(m_EManager, SoundEvent.MopWater);
             }
             public void Update()
+            {
+                return;
+            }
+            public void NightUpdate()
             {
                 return;
             }
