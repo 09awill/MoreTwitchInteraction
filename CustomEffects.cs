@@ -9,6 +9,8 @@ using UnityEngine;
 using KitchenMoreTwitchInteraction;
 using UnityEngine.UIElements;
 using KitchenLib.Systems;
+using DeconstructorMod.Components;
+using static UnityEngine.EventSystems.EventTrigger;
 
 namespace MoreTwitchInteraction
 {
@@ -89,8 +91,6 @@ namespace MoreTwitchInteraction
             }
             public void Order()
             {
-                if (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Chance").Get() / 100f) return;
-
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
                 foreach (var p in players)
                 {
@@ -186,11 +186,8 @@ namespace MoreTwitchInteraction
             }
             public void Order()
             {
-                if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Chance").Get() / 100f)
-                {
-                    using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                    AdjustPlayerSpeed(m_EManager, (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Effect").Get() / 100, m_SpeedBoostDuration, players);
-                }
+                using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
+                AdjustPlayerSpeed(m_EManager, (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Effect").Get() / 100, m_SpeedBoostDuration, players);
             }
             public void Update()
             {
@@ -228,11 +225,8 @@ namespace MoreTwitchInteraction
             }
             public void Order()
             {
-                if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Chance").Get() / 100f)
-                {
-                    using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                    AdjustPlayerSpeed(m_EManager, (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Effect").Get() / 100, m_SlowDuration, players);
-                }
+                using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
+                AdjustPlayerSpeed(m_EManager, (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Effect").Get() / 100, m_SlowDuration, players);
             }
             public void Update()
             {
@@ -307,12 +301,9 @@ namespace MoreTwitchInteraction
             }
             public void Order()
             {
-                if (Random.Range(0f, 1f) < (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Chance").Get() / 100f)
-                {
-                    using var apps = m_ApplianceQuery.ToEntityArray(Allocator.Temp);
-                    Entity eA = apps[Random.Range(0, apps.Length)];
-                    m_EManager.AddComponent<CIsOnFire>(eA);
-                }
+                using var apps = m_ApplianceQuery.ToEntityArray(Allocator.Temp);
+                Entity eA = apps[Random.Range(0, apps.Length)];
+                m_EManager.AddComponent<CIsOnFire>(eA);
             }
             public void Update()
             {
@@ -368,7 +359,97 @@ namespace MoreTwitchInteraction
 
         }
 
+        public class CallNextCustomer : CustomEffect
+        {
+            private EntityQuery m_AutomatedOrderQuery;
+            private EntityQuery m_IsDayEntityQuery;
 
+            private EntityManager m_EManager;
+            public string Name => "CallNextCustomer";
+            public int OrderIndex => 103;
+            public bool ShowUI => true;
+
+            public bool MadvionOnly => false;
+
+            public bool HasChance => true;
+            public QueryHelper[] GetQueryHelpers()
+            {
+                return new QueryHelper[] { new QueryHelper().All(typeof(CBedroomPart), typeof(CAccelerateTimeAfterDuration)), new QueryHelper().All(typeof(SIsDayTime))};
+            }
+
+            public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries)
+            {
+                m_EManager = pEntityManager;
+                m_AutomatedOrderQuery = pQueries[0];
+                m_IsDayEntityQuery = pQueries[1];
+            }
+            public void Order()
+            {
+                using var isDay = m_IsDayEntityQuery.ToEntityArray(Allocator.Temp);
+                if (isDay.Length != 1)
+                {
+                    return;
+                }
+                Entity e = m_EManager.CreateEntity();
+                //m_EManager.AddComponent<CAppliance>(e);
+                CAppliance appliance = new CAppliance()
+                {
+                    ID = ApplianceReferences.BookingDesk
+                };
+                m_EManager.AddComponentData(e, appliance);
+                m_EManager.AddComponent<CPosition>(e);
+                m_EManager.AddComponent<CAccelerateTimeAfterDuration>(e);
+                m_EManager.AddComponent<CBedroomPart>(e);
+                CLifetime liftime = new CLifetime()
+                {
+                    RemainingLife = 0.15f
+                };
+                m_EManager.AddComponentData(e, liftime);
+
+                CDurationRequirement durationRequirement = new CDurationRequirement()
+                {
+                    NeedsBeforeClosing = true,
+                    NeedsScheduledCustomers = false
+                };
+                m_EManager.AddComponentData(e, durationRequirement);
+                CTakesDuration cTakesDuration = new CTakesDuration()
+                {
+                    Active = true,
+                    Remaining = 0,
+                    Total = 0.1f
+                };
+                m_EManager.AddComponentData(e, cTakesDuration);
+
+
+            }
+            public void Update()
+            {
+                using var apps = m_AutomatedOrderQuery.ToEntityArray(Allocator.Temp);
+                /*
+                foreach(var app in apps)
+                {
+                    CTakesDuration cTakesDuration = m_EManager.GetComponentData<CTakesDuration>(app);
+                    if (cTakesDuration.Remaining > 50)
+                    {
+                        m_EManager.DestroyEntity(app);
+                    }
+                    if (cTakesDuration.Remaining == 0)
+                    {
+                        cTakesDuration.Remaining = 100;
+                        cTakesDuration.Total = 100;
+                        m_EManager.SetComponentData(app, cTakesDuration);
+                    }
+                }
+                */
+                return;
+            }
+            public void NightUpdate()
+            {
+                return;
+            }
+
+
+        }
 
 
 

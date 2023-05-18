@@ -27,10 +27,10 @@ namespace KitchenMoreTwitchInteraction
             using var views = m_ViewQuery.ToComponentDataArray<CLinkedView>(Allocator.Temp);
             using var orders = m_ViewQuery.ToComponentDataArray<COption>(Allocator.Temp);
             using var positions = m_ViewQuery.ToComponentDataArray<CPosition>(Allocator.Temp);
-            
 
             for (int i = 0; i < views.Length;i++)
             {
+
                 SendUpdate(views[i], new CustomTwitchOptionView.ViewData()
                 {
                     HeightIndex = orders[i].HeightIndex,

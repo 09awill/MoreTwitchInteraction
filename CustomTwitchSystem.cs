@@ -9,20 +9,22 @@ using KitchenLib.Preferences;
 using System.Linq;
 
 using MoreTwitchInteraction;
+using static MoreTwitchInteraction.CustomEffects;
 
 namespace KitchenModName
 {
     internal class CustomTwitchSystem : RestaurantSystem
     {
         private EntityQuery m_OptionsQuery;
-        CustomEffects.CustomEffect[] m_Effects = new CustomEffects.CustomEffect[]
+        CustomEffect[] m_Effects = new CustomEffect[]
         {
-            new CustomEffects.Order66(),
-            new CustomEffects.SpeedBoost(),
-            new CustomEffects.Slow(),
-            new CustomEffects.Fire(),
-            new CustomEffects.CleanMess(),
-            new CustomEffects.SOS(),
+            new Order66(),
+            new SpeedBoost(),
+            new Slow(),
+            new Fire(),
+            new CleanMess(),
+            new SOS(),
+            new CallNextCustomer()
         };
 
         private Dictionary<string, CCustomOrder> m_Orders;
@@ -82,6 +84,7 @@ namespace KitchenModName
             m_Orders[pOrder.Name] = ce;
             CustomEffects.CustomEffect effect = m_Effects.Where(e => e.Name == m_Options[pOrder.Order].EffectName).First();
             if (effect.MadvionOnly && pOrder.Name != "madvion") return;
+            if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(effect.Name + "Chance").Get() / 100f)) return;
             effect.Order();
         }
 

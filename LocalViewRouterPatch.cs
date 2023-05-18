@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace KitchenMoreTwitchInteraction
@@ -17,34 +18,38 @@ namespace KitchenMoreTwitchInteraction
     [HarmonyPatch]
     internal class LocalViewRouterPatch
     {
-        private static MethodInfo GetPrefabMethod = ReflectionUtils.GetMethod<LocalViewRouter>("GetPrefab");
+        private static GameObject _customTwitchOrderGO = null;
 
         [HarmonyPatch(typeof(LocalViewRouter), "GetPrefab", new Type[] { typeof(ViewType) })]
         [HarmonyPrefix]
-        static bool GetPrefab_Prefix(ref GameObject __result, ref LocalViewRouter __instance, ViewType view_type)
+        static bool GetPrefab_Prefix(ref LocalViewRouter __instance, ref GameObject __result, ViewType view_type)
         {
             if (view_type == (ViewType)666)
             {
-                __result = (GameObject)GetPrefabMethod.Invoke(__instance, new object[] { ViewType.TwitchOrderOption });
-                //__result = Mod.VanillaAssetDirectory.ViewPrefabs[ViewType.TwitchOrderOption];
-                if(__result.TryGetComponent(out TwitchOptionsView twitchOptionsView))
+                if (_customTwitchOrderGO == null)
                 {
-                    twitchOptionsView.enabled = false;
-                    //GameObject.Destroy(twitchOptionsView);
+                    GameObject goHider = new GameObject("Hider");
+                    goHider.SetActive(false);
+                    MethodInfo m_getPrefab = typeof(LocalViewRouter).GetMethod("GetPrefab", BindingFlags.NonPublic | BindingFlags.Instance);
+                    GameObject obj = m_getPrefab.Invoke(__instance, new object[] { ViewType.TwitchOrderOption }) as GameObject;
+                    if (obj != null)
+                    {
+                        _customTwitchOrderGO = GameObject.Instantiate(obj as GameObject);
+                        _customTwitchOrderGO.name = "CustomTwitchOrderOption";
+                        TwitchOptionsView twitchOptionsView = _customTwitchOrderGO.GetComponent<TwitchOptionsView>();
+                        Component.DestroyImmediate(twitchOptionsView);
+                        _customTwitchOrderGO.transform.SetParent(goHider.transform);
+
+                        CustomTwitchOptionView view = _customTwitchOrderGO.AddComponent<CustomTwitchOptionView>();
+                        view.Container = _customTwitchOrderGO.GetChild("Container");
+                        view.Renderer = _customTwitchOrderGO.GetChild("Container").GetChild("Image").GetComponent<Renderer>();
+                        view.Text = _customTwitchOrderGO.GetChild("Container").GetChild("Instruction").GetComponent<TextMeshPro>();
+                    }
                 }
-                CustomTwitchOptionView view = __result.GetComponent<CustomTwitchOptionView>();
-                if(view == null) view = __result.AddComponent<CustomTwitchOptionView>();
-
-                view.Container = __result.GetChild("Container");
-
-
-                view.Renderer = view.Container.GetChild("Image").GetComponent<Renderer>();
-                view.Text = view.Container.GetChild("Instruction").GetComponent<TextMeshPro>();
+                __result = _customTwitchOrderGO;
                 return false;
-            } else
-            {
-                return true;
             }
+            return true;
         }
     }
 }
