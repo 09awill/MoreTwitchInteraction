@@ -7,7 +7,6 @@ using Kitchen.ChefConnector.Commands;
 using KitchenMoreTwitchInteraction;
 using KitchenLib.Preferences;
 using System.Linq;
-
 using MoreTwitchInteraction;
 using static MoreTwitchInteraction.CustomEffects;
 
@@ -62,6 +61,7 @@ namespace KitchenModName
                 if (!Has<SIsDayTime>()) return;
                 if (!Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get()) return;
                 if (Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() < 1) return;
+                if (pOrder.Bits <= 0 && Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Get()) return;
             }
             if (!m_Options.ContainsKey(pOrder.Order)) return;
             CCustomOrder ce;
