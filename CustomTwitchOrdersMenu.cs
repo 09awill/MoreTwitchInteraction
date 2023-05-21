@@ -51,11 +51,16 @@ namespace MoreTwitchInteraction
                     {
                         ResetDefaultSettings();
                     }, 0, 1f, 0.2f);
-                    New<SpacerElement>(true);
                     AddLabel("All Effects Enabled : ");
                     Add(new Option<bool>(new List<bool> { false, true }, Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get(), new List<string>() { "Disabled", "Enabled" }))
                         .OnChanged += delegate (object _, bool value) {
                             Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Set(value);
+                            Mod.PManager.Save();
+                        };
+                    AddLabel("Bits Only Mode Enabled : ");
+                    Add(new Option<bool>(new List<bool> { false, true }, Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Get(), new List<string>() { "Disabled", "Enabled" }))
+                        .OnChanged += delegate (object _, bool value) {
+                            Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Set(value);
                             Mod.PManager.Save();
                         };
                     AddLabel("Show UI : ");
@@ -142,6 +147,7 @@ namespace MoreTwitchInteraction
         {
             Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Set(true);
             Mod.PManager.GetPreference<PreferenceBool>("ShowUI").Set(true);
+            Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Set(false);
             Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Set(100);
             Mod.PManager.GetPreference<PreferenceInt>("SlowEffect").Set(30);
             Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Set(100);
