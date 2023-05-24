@@ -69,6 +69,8 @@ namespace MoreTwitchInteraction
         public class Order66 : CustomEffect
         {
             private EntityQuery m_PlayerQuery;
+            private EntityQuery m_ApplianceQuery;
+
             private EntityManager m_EManager;
             public static QueryHelper QueryHelper = new QueryHelper().All(typeof(CPlayer));
 
@@ -81,13 +83,14 @@ namespace MoreTwitchInteraction
 
             public QueryHelper[] GetQueryHelpers()
             {
-                return new QueryHelper[] { new QueryHelper().All(typeof(CPlayer)) };
+                return new QueryHelper[] { new QueryHelper().All(typeof(CPlayer)), new QueryHelper().All(typeof(CAppliance),typeof(CApplyingProcess)).None(typeof(CNoBadProcesses)) };
             }
 
             public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries)
             {
                 m_EManager = pEntityManager;
                 m_PlayerQuery = pQueries[0];
+                m_ApplianceQuery = pQueries[1];
             }
             public void Order()
             {
@@ -97,6 +100,7 @@ namespace MoreTwitchInteraction
                     CookItemInHand(p);
                     CreateMessAroundPlayer(p);
                 }
+                CookItemsOnHobs();
             }
 
             private void CreateMessAroundPlayer(Entity p)
@@ -148,6 +152,31 @@ namespace MoreTwitchInteraction
                     }
                 }
             }
+            private void CookItemsOnHobs()
+            {
+                using var cookers = m_ApplianceQuery.ToEntityArray(Allocator.Temp);
+                foreach (var cooker in cookers)
+                {
+                    if (!m_EManager.RequireComponent(cooker, out CItemHolder holder)) continue;
+                    if (holder.HeldItem == default) continue;
+                    if (!m_EManager.RequireComponent(holder.HeldItem, out CItem item)) continue;
+                    GameDataObject gdo = GameData.Main.Get(item.ID);
+                    if (gdo == null) continue;
+                    Item itemObj = gdo as Item;
+                    if (itemObj == null) continue;
+
+                    foreach (var process in itemObj.DerivedProcesses)
+                    {
+                        if (process.Process.ID == ProcessReferences.Cook)
+                        {
+                            m_EManager.DestroyEntity(holder.HeldItem);
+                            Entity ent = m_EManager.CreateEntity();
+                            m_EManager.AddComponentData(ent, new CCreateItem());
+                            m_EManager.SetComponentData(ent, new CCreateItem() { ID = process.Result.ID, Holder = cooker });
+                        }
+                    }
+                }
+            }
 
             public void Update()
             {
@@ -164,8 +193,6 @@ namespace MoreTwitchInteraction
             private EntityQuery m_PlayerQuery;
             private EntityManager m_EManager;
             private float m_SpeedBoostDuration = 5f;
-            public static QueryHelper QueryHelper = new QueryHelper().All(typeof(CPlayer));
-
             public string Name => "SpeedBoost";
             public int OrderIndex => 101;
             public bool ShowUI => true;
