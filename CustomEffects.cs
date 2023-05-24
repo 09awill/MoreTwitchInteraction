@@ -397,6 +397,8 @@ namespace MoreTwitchInteraction
                     ID = ApplianceReferences.BookingDesk
                 };
                 m_EManager.AddComponentData(e, appliance);
+                m_EManager.AddComponent<CDoesNotOccupy>(e);
+                m_EManager.AddComponent<CDoNotPersist>(e);
                 m_EManager.AddComponent<CPosition>(e);
                 m_EManager.AddComponent<CAccelerateTimeAfterDuration>(e);
                 m_EManager.AddComponent<CBedroomPart>(e);

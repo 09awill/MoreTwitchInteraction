@@ -26,7 +26,7 @@ namespace KitchenMoreTwitchInteraction
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
         public const string MOD_NAME = "More Twitch Interaction";
-        public const string MOD_VERSION = "0.2.0";
+        public const string MOD_VERSION = "0.2.1";
         public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
