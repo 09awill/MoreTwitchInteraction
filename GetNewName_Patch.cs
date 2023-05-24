@@ -22,17 +22,13 @@ namespace KitchenMoreTwitchInteraction
         public static void GetNewName(Entity e)
         {
             TwitchNameList names = Mod.Instance.World.GetExistingSystem<TwitchNameList>();
-            if(names.GetName(e) == "madvion")
+            if (names.GetName(e) != "madvion") return;
+            CCustomer customer = new CCustomer()
             {
-                CCustomer customer = new CCustomer()
-                {
-                    Scale = 1.2f,
-                    Speed = 2f,
-
-                };
-                Mod.Instance.EntityManager.SetComponentData(e, customer);
-
-            }
+                Scale = 1.2f,
+                Speed = 2f,
+            };
+            Mod.Instance.EntityManager.SetComponentData(e, customer);
         }
     }
 }
