@@ -15,6 +15,7 @@ namespace KitchenModName
     internal class CustomTwitchSystem : RestaurantSystem
     {
         private EntityQuery m_OptionsQuery;
+
         CustomEffect[] m_Effects = new CustomEffect[]
         {
             new Order66(),
@@ -116,7 +117,6 @@ namespace KitchenModName
             if (Has<SIsDayFirstUpdate>()) return;
 
             using NativeArray<Entity> options = m_OptionsQuery.ToEntityArray(Allocator.Temp);
-
 
             for (int i = 0; i < m_Effects.Length; i++)
             {
