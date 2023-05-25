@@ -17,7 +17,7 @@ namespace KitchenMoreTwitchInteraction
     [HarmonyPatch]
     public class GetNewName_Patch
     {
-        //private static bool gettingName = false;
+        private static bool gettingName = false;
         [HarmonyPatch(typeof(TwitchNameList), "GetNewName")]
         [HarmonyPostfix]
         public static void GetNewName(Entity e)
@@ -44,8 +44,8 @@ namespace KitchenMoreTwitchInteraction
 
 
         }
-        /*
-         * COULD MAYBE ALTER NAMES LIKE THIS
+        
+        //COULD MAYBE ALTER NAMES LIKE THIS
         [HarmonyPatch(typeof(TwitchNameList), "GetName")]
         [HarmonyPostfix]
         public static void GetName(ref string __result, Entity e)
@@ -59,6 +59,6 @@ namespace KitchenMoreTwitchInteraction
             __result += icon;
             return;
         }
-        */
+        
     }
 }

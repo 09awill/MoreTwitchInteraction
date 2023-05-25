@@ -294,7 +294,7 @@ namespace MoreTwitchInteraction
 
             public string Name => "SOS";
             public int OrderIndex => 911;
-            public bool ShowUI => true;
+            public bool ShowUI => false;
 
             public bool MadvionOnly => false;
             public bool HasChance => false;
@@ -370,7 +370,7 @@ namespace MoreTwitchInteraction
             private EntityManager m_EManager;
             public string Name => "CleanMess";
             public int OrderIndex => 50;
-            public bool ShowUI => true;
+            public bool ShowUI => false;
 
             public bool MadvionOnly => true;
 
