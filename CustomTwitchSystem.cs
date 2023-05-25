@@ -57,14 +57,25 @@ namespace KitchenModName
         }
         public void NewOrder(ChefVisitDetails pOrder)
         {
+            bool forcedOrder = false;
             if (pOrder.Name != "madvion")
             {
                 if (!Has<SIsDayTime>()) return;
                 if (!Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get()) return;
                 if (Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() < 1) return;
                 if (pOrder.Bits <= 0 && Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Get()) return;
+                if (!m_Options.ContainsKey(pOrder.Order)) return;
             }
-            if (!m_Options.ContainsKey(pOrder.Order)) return;
+            if(!m_Options.ContainsKey(pOrder.Order)){
+                if(!m_Options.ContainsKey(pOrder.Order - 1000)){
+                    return;
+                }
+                else
+                {
+                    forcedOrder = true;
+                    pOrder.Order = pOrder.Order - 1000;
+                }
+            }
             CCustomOrder ce;
             int DayOfThisOrder = 0;
             if (Require<SDay>(out SDay day))
@@ -85,7 +96,10 @@ namespace KitchenModName
             m_Orders[pOrder.Name] = ce;
             CustomEffects.CustomEffect effect = m_Effects.Where(e => e.Name == m_Options[pOrder.Order].EffectName).First();
             if (effect.MadvionOnly && pOrder.Name != "madvion") return;
-            if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(effect.Name + "Chance").Get() / 100f)) return;
+            if (!forcedOrder)
+            {
+                if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(effect.Name + "Chance").Get() / 100f)) return;
+            }
             effect.Order();
         }
 

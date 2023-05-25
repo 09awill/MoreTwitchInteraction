@@ -83,7 +83,7 @@ namespace MoreTwitchInteraction
 
             public QueryHelper[] GetQueryHelpers()
             {
-                return new QueryHelper[] { new QueryHelper().All(typeof(CPlayer)), new QueryHelper().All(typeof(CAppliance),typeof(CApplyingProcess)).None(typeof(CNoBadProcesses)) };
+                return new QueryHelper[] { new QueryHelper().All(typeof(CPlayer)), new QueryHelper().All(typeof(CAppliance),typeof(CApplyingProcess), typeof(CCausesSpills)).None(typeof(CNoBadProcesses),typeof(CItemProvider)) };
             }
 
             public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries)
@@ -145,10 +145,21 @@ namespace MoreTwitchInteraction
                 {
                     if (process.Process.ID == ProcessReferences.Cook)
                     {
+                        m_EManager.AddComponent<CItemUndergoingProcess>(holder.HeldItem);
+                        CItemUndergoingProcess proc = new CItemUndergoingProcess()
+                        {
+                            IsAutomatic = true,
+                            Progress = 1,
+                            IsBad = process.IsBad,
+                            Process = ProcessReferences.Cook
+                        };
+                        m_EManager.SetComponentData(holder.HeldItem, proc);
+                        /*
                         m_EManager.DestroyEntity(holder.HeldItem);
                         Entity ent = m_EManager.CreateEntity();
                         m_EManager.AddComponentData(ent, new CCreateItem());
                         m_EManager.SetComponentData(ent, new CCreateItem() { ID = process.Result.ID, Holder = p });
+                        */
                     }
                 }
             }
@@ -169,10 +180,18 @@ namespace MoreTwitchInteraction
                     {
                         if (process.Process.ID == ProcessReferences.Cook)
                         {
+                            if (!m_EManager.RequireComponent(holder.HeldItem, out CItemUndergoingProcess proc)) continue;
+                            proc.Progress = 1;
+                            m_EManager.SetComponentData(holder.HeldItem, proc);
+
+                            /*
+                            item.ID = process.Result.ID;
+                            m_EManager.SetComponentData(holder.HeldItem, item);
                             m_EManager.DestroyEntity(holder.HeldItem);
                             Entity ent = m_EManager.CreateEntity();
                             m_EManager.AddComponentData(ent, new CCreateItem());
                             m_EManager.SetComponentData(ent, new CCreateItem() { ID = process.Result.ID, Holder = cooker });
+                            */
                         }
                     }
                 }
