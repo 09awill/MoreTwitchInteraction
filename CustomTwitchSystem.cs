@@ -9,12 +9,16 @@ using KitchenLib.Preferences;
 using System.Linq;
 using MoreTwitchInteraction;
 using static MoreTwitchInteraction.CustomEffects;
+using static UnityEngine.Rendering.VirtualTexturing.Debugging;
+using TMPro;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace KitchenModName
 {
     internal class CustomTwitchSystem : RestaurantSystem
     {
         private EntityQuery m_OptionsQuery;
+
         CustomEffect[] m_Effects = new CustomEffect[]
         {
             new Order66(),
@@ -45,6 +49,13 @@ namespace KitchenModName
                 }
 
                 m_Effects[i].Initialise(EntityManager, queries);
+                if (m_Effects[i].ShowUI)
+                {
+                    var spriteAsset = Mod.Bundle.LoadAsset<TMP_SpriteAsset>(m_Effects[i].Name + "Icon");
+                    TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
+                    spriteAsset.material = Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
+                    spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>(m_Effects[i].Name + "Icon");
+                }
 
 
                 m_Options.Add(m_Effects[i].OrderIndex, new COption() { HeightIndex = i, EffectName = m_Effects[i].Name });
@@ -56,14 +67,25 @@ namespace KitchenModName
         }
         public void NewOrder(ChefVisitDetails pOrder)
         {
+            bool forcedOrder = false;
             if (pOrder.Name != "madvion")
             {
                 if (!Has<SIsDayTime>()) return;
                 if (!Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get()) return;
                 if (Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() < 1) return;
                 if (pOrder.Bits <= 0 && Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Get()) return;
+                if (!m_Options.ContainsKey(pOrder.Order)) return;
             }
-            if (!m_Options.ContainsKey(pOrder.Order)) return;
+            if(!m_Options.ContainsKey(pOrder.Order)){
+                if(!m_Options.ContainsKey(pOrder.Order - 1000)){
+                    return;
+                }
+                else
+                {
+                    forcedOrder = true;
+                    pOrder.Order = pOrder.Order - 1000;
+                }
+            }
             CCustomOrder ce;
             int DayOfThisOrder = 0;
             if (Require<SDay>(out SDay day))
@@ -84,7 +106,10 @@ namespace KitchenModName
             m_Orders[pOrder.Name] = ce;
             CustomEffects.CustomEffect effect = m_Effects.Where(e => e.Name == m_Options[pOrder.Order].EffectName).First();
             if (effect.MadvionOnly && pOrder.Name != "madvion") return;
-            if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(effect.Name + "Chance").Get() / 100f)) return;
+            if (!forcedOrder)
+            {
+                if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(effect.Name + "Chance").Get() / 100f)) return;
+            }
             effect.Order();
         }
 
@@ -116,7 +141,6 @@ namespace KitchenModName
             if (Has<SIsDayFirstUpdate>()) return;
 
             using NativeArray<Entity> options = m_OptionsQuery.ToEntityArray(Allocator.Temp);
-
 
             for (int i = 0; i < m_Effects.Length; i++)
             {
@@ -189,6 +213,13 @@ namespace KitchenModName
             EntityManager.AddComponentData(entity, new COption(pIndex, pEffect.Name, pEffect.OrderIndex));
 
             return entity;
+        }
+        public string GetOrderIcon(string pName)
+        {
+            if (!m_Orders.ContainsKey(pName)) return "";
+            CustomEffect e = m_Effects.Where(e => e.Name == m_Orders[pName].OrderID).First();
+            if (!e.ShowUI) return "";
+            return "<size=125><voffset=20><sprite name=\""+ m_Orders[pName].OrderID + "Icon" + "\"></voffset></size>";
         }
 
         public struct COption : IComponentData
