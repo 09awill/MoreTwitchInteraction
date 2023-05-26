@@ -19,7 +19,7 @@ namespace KitchenModName
     {
         private EntityQuery m_OptionsQuery;
 
-        CustomEffect[] m_Effects = new CustomEffect[]
+        public static CustomEffect[] m_Effects =
         {
             new Order66(),
             new SpeedBoost(),
@@ -49,14 +49,6 @@ namespace KitchenModName
                 }
 
                 m_Effects[i].Initialise(EntityManager, queries);
-                if (m_Effects[i].ShowUI)
-                {
-                    var spriteAsset = Mod.Bundle.LoadAsset<TMP_SpriteAsset>(m_Effects[i].Name + "Icon");
-                    TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
-                    spriteAsset.material = Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
-                    spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>(m_Effects[i].Name + "Icon");
-                }
-
 
                 m_Options.Add(m_Effects[i].OrderIndex, new COption() { HeightIndex = i, EffectName = m_Effects[i].Name });
 
