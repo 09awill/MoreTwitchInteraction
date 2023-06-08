@@ -21,13 +21,13 @@ namespace KitchenModName
 
         public static CustomEffect[] m_Effects =
         {
-            new Order66(),
-            new SpeedBoost(),
             new Slow(),
+            new SpeedBoost(),
             new Fire(),
+            new CallNextCustomer(),
+            new Order66(),
             new CleanMess(),
             new SOS(),
-            new CallNextCustomer()
         };
 
         private Dictionary<string, CCustomOrder> m_Orders;
