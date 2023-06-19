@@ -1,16 +1,11 @@
 ﻿using HarmonyLib;
 using Kitchen;
+using KitchenLib.Preferences;
 using KitchenLib.Utils;
-using KitchenMoreTwitchInteraction;
 using MoreTwitchInteraction;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
-using Unity.Transforms;
 using UnityEngine;
 
 namespace KitchenMoreTwitchInteraction

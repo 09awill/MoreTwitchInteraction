@@ -1,20 +1,9 @@
-﻿using DeconstructorMod.Components;
-using Kitchen;
-using KitchenData;
+﻿using Kitchen;
 using MessagePack;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static DeconstructorMod.Customs.Deconstructor;
 using TMPro;
-using UnityEngine.VFX;
 using UnityEngine;
-using KitchenLib.Utils;
 using KitchenMoreTwitchInteraction;
-using Unity.Collections;
-using Unity.Entities.UniversalDelegates;
+using KitchenLib.Preferences;
 
 namespace MoreTwitchInteraction
 {
@@ -50,9 +39,25 @@ namespace MoreTwitchInteraction
         protected override void UpdateData(ViewData data)
         {
             gameObject.name = "CUSTOM TWITCH OPTION";
+            bool horizontal = Mod.PManager.GetPreference<PreferenceBool>("Horizontal").Get();
+            int size = Mod.PManager.GetPreference<PreferenceInt>("IconSize").Get();
+            int yPos = Mod.PManager.GetPreference<PreferenceInt>("IconYPos").Get();
+            int xPos = Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Get();
+
+
+            float sizefloat = size / 100f;
+            transform.localScale = new Vector3(sizefloat, sizefloat, sizefloat);
+
             Vector3 localPosition = Container.transform.localPosition;
-            localPosition.y = (Height * ((float)data.HeightIndex + 1)) - 0.5f;
-            localPosition.x = - 0.8f;
+            if (!horizontal)
+            {
+                localPosition.y = ((Height * ((float)data.HeightIndex + 1)) - 0.5f) - yPos;
+                localPosition.x = -0.8f - xPos;
+            } else
+            {
+                localPosition.y = (Height - 0.5f) - yPos;
+                localPosition.x = (1.2f * ((float)data.HeightIndex + 1) - xPos) - -1.2f;
+            }
             Transform t = Renderer.transform;
             t.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             t.localPosition = new Vector3(t.localPosition.x, -0.2f, t.localPosition.z);

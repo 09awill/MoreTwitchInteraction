@@ -1,22 +1,13 @@
-﻿using HarmonyLib;
-using Kitchen;
-using Kitchen.ChefConnector;
-using KitchenData;
+﻿using Kitchen;
 using KitchenLib;
 using KitchenLib.Event;
 using KitchenLib.Preferences;
-using KitchenLib.References;
 using KitchenMods;
 using MoreTwitchInteraction;
-using System.Collections.Generic;
-using System;
 using System.Linq;
 using System.Reflection;
-using TwitchLib.Client.Interfaces;
-using Unity.Properties;
 using UnityEngine;
 using TMPro;
-using Unity.Entities.UniversalDelegates;
 using KitchenModName;
 
 // Namespace should have "Kitchen" in the beginning
@@ -29,7 +20,7 @@ namespace KitchenMoreTwitchInteraction
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
         public const string MOD_NAME = "More Twitch Interaction";
-        public const string MOD_VERSION = "0.2.5";
+        public const string MOD_VERSION = "0.2.6";
         public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
@@ -104,6 +95,13 @@ namespace KitchenMoreTwitchInteraction
             PManager.RegisterPreference(new PreferenceInt("Order66Chance", 5));
             PManager.RegisterPreference(new PreferenceInt("InteractionsPerDay", 2));
             PManager.RegisterPreference(new PreferenceInt("CallNextCustomerChance", 100));
+            PManager.RegisterPreference(new PreferenceBool("Horizontal", false));
+            PManager.RegisterPreference(new PreferenceInt("IconSize", 100));
+            PManager.RegisterPreference(new PreferenceInt("IconYPos", 0));
+            PManager.RegisterPreference(new PreferenceInt("IconXPos", 0));
+
+
+
 
             PManager.Load();
 
