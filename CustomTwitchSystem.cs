@@ -9,9 +9,6 @@ using KitchenLib.Preferences;
 using System.Linq;
 using MoreTwitchInteraction;
 using static MoreTwitchInteraction.CustomEffects;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
-using TMPro;
-using static UnityEngine.UI.GridLayoutGroup;
 
 namespace KitchenModName
 {

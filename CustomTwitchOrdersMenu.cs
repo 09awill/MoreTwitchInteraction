@@ -1,19 +1,11 @@
 ﻿using Kitchen.Modules;
 using Kitchen;
 using KitchenLib.Preferences;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using KitchenMoreTwitchInteraction;
 using UnityExplorer.UI;
-using KitchenLib.Event;
-using KitchenLib.Utils;
-using KitchenLib;
-using System.Reflection;
-using static UnityEngine.Rendering.DebugUI;
 
 namespace MoreTwitchInteraction
 {
@@ -26,7 +18,7 @@ namespace MoreTwitchInteraction
         public override void Setup(int player_id)
         {
             CurrentPage = 0;
-            PageSelector = new Option<int>(new List<int>() { 0 , 1, 2 }, CurrentPage, new List<string>() { "Overall Settings", "Effects", "Effects" });
+            PageSelector = new Option<int>(new List<int>() { 0 , 1, 2, 3 }, CurrentPage, new List<string>() { "Overall Settings", "Effects", "Effects", "Icon Settings" });
             PageSelector.OnChanged += delegate (object _, int result)
             {
                 CurrentPage = result;
@@ -79,7 +71,7 @@ namespace MoreTwitchInteraction
                     break;
                 case 1:
                     AddLabel("Slow Chance : ");
-                    Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get(), strings.ToList()))
+                    Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Get(), strings.ToList()))
                         .OnChanged += delegate (object _, int value)
                         {
                             Mod.PManager.GetPreference<PreferenceInt>("SlowChance").Set(value);
@@ -93,7 +85,7 @@ namespace MoreTwitchInteraction
                             Mod.PManager.Save();
                         };
                     AddLabel("Speed Chance : ");
-                    Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get(), strings.ToList()))
+                    Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Get(), strings.ToList()))
                         .OnChanged += delegate (object _, int value)
                         {
                             Mod.PManager.GetPreference<PreferenceInt>("SpeedBoostChance").Set(value);
@@ -110,7 +102,7 @@ namespace MoreTwitchInteraction
                     break;
                 case 2:
                     AddLabel("Fire Chance : ");
-                    Add(new Option<int>(Utils.GenerateIntArray("0|100|10", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get(), strings.ToList()))
+                    Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("FireChance").Get(), strings.ToList()))
                         .OnChanged += delegate (object _, int value)
                         {
                             Mod.PManager.GetPreference<PreferenceInt>("FireChance").Set(value);
@@ -128,6 +120,48 @@ namespace MoreTwitchInteraction
                         .OnChanged += delegate (object _, int value)
                         {
                             Mod.PManager.GetPreference<PreferenceInt>("CallNextCustomerChance").Set(value);
+                            Mod.PManager.Save();
+                        };
+                    break;
+                case 3:
+                    AddLabel("Layout : ");
+                    Add(new Option<bool>(new List<bool>() { false, true }, Mod.PManager.GetPreference<PreferenceBool>("Horizontal").Get(), new List<string>() { "Vertical", "Horizontal" }))
+                        .OnChanged += delegate (object _, bool value)
+                        {
+                            Mod.PManager.GetPreference<PreferenceBool>("Horizontal").Set(value);
+                            if (value)
+                            {
+                                int xpos = Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Get();
+                                xpos = Mathf.Clamp(xpos, 7, 100);
+                                Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Set(xpos);
+                            } else
+                            {
+                                int xpos = Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Get();
+                                xpos = Mathf.Clamp(xpos - 7, 0, 100);
+                                Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Set(xpos);
+                            }
+                            Mod.PManager.Save();
+                            Redraw(3);
+                        };
+                    AddLabel("Icon Size : ");
+                    Add(new Option<int>(Utils.GenerateIntArray("20|150|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("IconSize").Get(), strings.ToList()))
+                        .OnChanged += delegate (object _, int value)
+                        {
+                            Mod.PManager.GetPreference<PreferenceInt>("IconSize").Set(value);
+                            Mod.PManager.Save();
+                        };
+                    AddLabel("Icon Y Position : ");
+                    Add(new Option<int>(Utils.GenerateIntArray("-5|20|1", out strings).ToList(), Mod.PManager.GetPreference<PreferenceInt>("IconYPos").Get(), strings.ToList()))
+                        .OnChanged += delegate (object _, int value)
+                        {
+                            Mod.PManager.GetPreference<PreferenceInt>("IconYPos").Set(value);
+                            Mod.PManager.Save();
+                        };
+                    AddLabel("Icon X Position : ");
+                    Add(new Option<int>(Utils.GenerateIntArray("0|100|1", out strings, prefix: "-").ToList(), Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Get(), strings.ToList()))
+                        .OnChanged += delegate (object _, int value)
+                        {
+                            Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Set(value);
                             Mod.PManager.Save();
                         };
                     break;
@@ -156,6 +190,10 @@ namespace MoreTwitchInteraction
             Mod.PManager.GetPreference<PreferenceInt>("Order66Chance").Set(5);
             Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Set(2);
             Mod.PManager.GetPreference<PreferenceInt>("CallNextCustomerChance").Set(100);
+            Mod.PManager.GetPreference<PreferenceBool>("Horizontal").Set(false);
+            Mod.PManager.GetPreference<PreferenceInt>("IconSize").Set(100);
+            Mod.PManager.GetPreference<PreferenceInt>("IconYPos").Set(0);
+            Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Set(0);
             Mod.PManager.Save();
             Redraw(CurrentPage);
         }
