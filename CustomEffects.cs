@@ -51,7 +51,6 @@ namespace MoreTwitchInteraction
             public string Name { get; }
             public int OrderIndex { get; }
             public bool ShowUI { get; }
-            public bool MadvionOnly { get; }
             public bool HasChance { get; }
             public QueryHelper[] GetQueryHelpers();
             public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries);
@@ -75,9 +74,6 @@ namespace MoreTwitchInteraction
             public int OrderIndex => 66;
             public bool ShowUI => false;
             public bool HasChance => true;
-
-            public bool MadvionOnly => false;
-
             public QueryHelper[] GetQueryHelpers()
             {
                 return new QueryHelper[] { new QueryHelper().All(typeof(CPlayer)), new QueryHelper().All(typeof(CAppliance),typeof(CApplyingProcess), typeof(CCausesSpills)).None(typeof(CNoBadProcesses),typeof(CItemProvider)) };
@@ -151,12 +147,6 @@ namespace MoreTwitchInteraction
                             Process = ProcessReferences.Cook
                         };
                         m_EManager.SetComponentData(holder.HeldItem, proc);
-                        /*
-                        m_EManager.DestroyEntity(holder.HeldItem);
-                        Entity ent = m_EManager.CreateEntity();
-                        m_EManager.AddComponentData(ent, new CCreateItem());
-                        m_EManager.SetComponentData(ent, new CCreateItem() { ID = process.Result.ID, Holder = p });
-                        */
                     }
                 }
             }
@@ -180,15 +170,6 @@ namespace MoreTwitchInteraction
                             if (!m_EManager.RequireComponent(holder.HeldItem, out CItemUndergoingProcess proc)) continue;
                             proc.Progress = 1;
                             m_EManager.SetComponentData(holder.HeldItem, proc);
-
-                            /*
-                            item.ID = process.Result.ID;
-                            m_EManager.SetComponentData(holder.HeldItem, item);
-                            m_EManager.DestroyEntity(holder.HeldItem);
-                            Entity ent = m_EManager.CreateEntity();
-                            m_EManager.AddComponentData(ent, new CCreateItem());
-                            m_EManager.SetComponentData(ent, new CCreateItem() { ID = process.Result.ID, Holder = cooker });
-                            */
                         }
                     }
                 }
@@ -213,9 +194,6 @@ namespace MoreTwitchInteraction
             public int OrderIndex => 101;
             public bool ShowUI => true;
             public bool HasChance => true;
-
-
-            public bool MadvionOnly => false;
 
             public QueryHelper[] GetQueryHelpers()
             {
@@ -251,8 +229,6 @@ namespace MoreTwitchInteraction
             public string Name => "Slow";
             public int OrderIndex => 100;
             public bool ShowUI => true;
-
-            public bool MadvionOnly => false;
             public bool HasChance => true;
 
 
@@ -292,8 +268,6 @@ namespace MoreTwitchInteraction
             public string Name => "SOS";
             public int OrderIndex => 911;
             public bool ShowUI => false;
-
-            public bool MadvionOnly => false;
             public bool HasChance => false;
 
 
@@ -327,9 +301,6 @@ namespace MoreTwitchInteraction
             public string Name => "Fire";
             public int OrderIndex => 102;
             public bool ShowUI => true;
-
-            public bool MadvionOnly => false;
-
             public bool HasChance => true;
 
             public QueryHelper[] GetQueryHelpers()
@@ -368,10 +339,7 @@ namespace MoreTwitchInteraction
             public string Name => "CleanMess";
             public int OrderIndex => 50;
             public bool ShowUI => false;
-
-            public bool MadvionOnly => true;
-
-            public bool HasChance => false;
+            public bool HasChance => true;
 
             public QueryHelper[] GetQueryHelpers()
             {
@@ -411,9 +379,6 @@ namespace MoreTwitchInteraction
             public string Name => "CallNextCustomer";
             public int OrderIndex => 103;
             public bool ShowUI => true;
-
-            public bool MadvionOnly => false;
-
             public bool HasChance => true;
             public QueryHelper[] GetQueryHelpers()
             {
@@ -469,23 +434,6 @@ namespace MoreTwitchInteraction
             }
             public void Update()
             {
-                using var apps = m_AutomatedOrderQuery.ToEntityArray(Allocator.Temp);
-                /*
-                foreach(var app in apps)
-                {
-                    CTakesDuration cTakesDuration = m_EManager.GetComponentData<CTakesDuration>(app);
-                    if (cTakesDuration.Remaining > 50)
-                    {
-                        m_EManager.DestroyEntity(app);
-                    }
-                    if (cTakesDuration.Remaining == 0)
-                    {
-                        cTakesDuration.Remaining = 100;
-                        cTakesDuration.Total = 100;
-                        m_EManager.SetComponentData(app, cTakesDuration);
-                    }
-                }
-                */
                 return;
             }
             public void NightUpdate()
