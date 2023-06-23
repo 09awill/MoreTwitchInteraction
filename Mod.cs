@@ -20,7 +20,7 @@ namespace KitchenMoreTwitchInteraction
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
         public const string MOD_NAME = "More Twitch Interaction";
-        public const string MOD_VERSION = "0.2.6";
+        public const string MOD_VERSION = "0.2.7";
         public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
@@ -95,6 +95,7 @@ namespace KitchenMoreTwitchInteraction
             PManager.RegisterPreference(new PreferenceInt("Order66Chance", 5));
             PManager.RegisterPreference(new PreferenceInt("InteractionsPerDay", 2));
             PManager.RegisterPreference(new PreferenceInt("CallNextCustomerChance", 100));
+            PManager.RegisterPreference(new PreferenceInt("CleanMessChance", 5));
             PManager.RegisterPreference(new PreferenceBool("Horizontal", false));
             PManager.RegisterPreference(new PreferenceInt("IconSize", 100));
             PManager.RegisterPreference(new PreferenceInt("IconYPos", 0));
@@ -129,30 +130,8 @@ namespace KitchenMoreTwitchInteraction
                     spriteAsset.material = UnityEngine.Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
                     spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>(effect.Name + "Icon");
                 }
-                /*
-                var spriteAsset = Mod.Bundle.LoadAsset<TMP_SpriteAsset>("fire" + "Icon");
-                TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
-                spriteAsset.material = UnityEngine.Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
-                spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>("fire" + "Icon");
-
-                spriteAsset = Mod.Bundle.LoadAsset<TMP_SpriteAsset>("SpeedBoost" + "Icon");
-                TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
-                spriteAsset.material = UnityEngine.Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
-                spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>("SpeedBoost" + "Icon");
-
-                spriteAsset = Mod.Bundle.LoadAsset<TMP_SpriteAsset>("Slow" + "Icon");
-                TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
-                spriteAsset.material = UnityEngine.Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
-                spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>("Slow" + "Icon");
-
-                spriteAsset = Mod.Bundle.LoadAsset<TMP_SpriteAsset>("CallNextCustomer" + "Icon");
-                TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
-                spriteAsset.material = UnityEngine.Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
-                spriteAsset.material.mainTexture = Mod.Bundle.LoadAsset<Texture2D>("CallNextCustomer" + "Icon");
-                */
             };
         }
-
         #region Logging
         public static void LogInfo(string _log) { Debug.Log($"[{MOD_NAME}] " + _log); }
         public static void LogWarning(string _log) { Debug.LogWarning($"[{MOD_NAME}] " + _log); }

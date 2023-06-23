@@ -122,6 +122,13 @@ namespace MoreTwitchInteraction
                             Mod.PManager.GetPreference<PreferenceInt>("CallNextCustomerChance").Set(value);
                             Mod.PManager.Save();
                         };
+                    AddLabel("Clean-up Mess Chance : ");
+                    Add(new Option<int>(Utils.GenerateIntArray("0|100|5", out strings, postfix: "%").ToList(), Mod.PManager.GetPreference<PreferenceInt>("CleanMessChance").Get(), strings.ToList()))
+                        .OnChanged += delegate (object _, int value)
+                        {
+                            Mod.PManager.GetPreference<PreferenceInt>("CleanMessChance").Set(value);
+                            Mod.PManager.Save();
+                        };
                     break;
                 case 3:
                     AddLabel("Layout : ");
@@ -190,6 +197,7 @@ namespace MoreTwitchInteraction
             Mod.PManager.GetPreference<PreferenceInt>("Order66Chance").Set(5);
             Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Set(2);
             Mod.PManager.GetPreference<PreferenceInt>("CallNextCustomerChance").Set(100);
+            Mod.PManager.GetPreference<PreferenceInt>("CleanMessChance").Set(5);
             Mod.PManager.GetPreference<PreferenceBool>("Horizontal").Set(false);
             Mod.PManager.GetPreference<PreferenceInt>("IconSize").Set(100);
             Mod.PManager.GetPreference<PreferenceInt>("IconYPos").Set(0);
