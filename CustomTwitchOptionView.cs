@@ -3,7 +3,6 @@ using MessagePack;
 using TMPro;
 using UnityEngine;
 using KitchenMoreTwitchInteraction;
-using KitchenLib.Preferences;
 
 namespace MoreTwitchInteraction
 {
@@ -18,6 +17,7 @@ namespace MoreTwitchInteraction
             public string Name;
             [Key(2)]
             public int OrderIndex;
+
             public bool IsChangedFrom(ViewData check)
             {
                 return HeightIndex != check.HeightIndex || Name != check.Name || OrderIndex != check.OrderIndex;
@@ -39,10 +39,10 @@ namespace MoreTwitchInteraction
         protected override void UpdateData(ViewData data)
         {
             gameObject.name = "CUSTOM TWITCH OPTION";
-            bool horizontal = Mod.PManager.GetPreference<PreferenceBool>("Horizontal").Get();
-            int size = Mod.PManager.GetPreference<PreferenceInt>("IconSize").Get();
-            int yPos = Mod.PManager.GetPreference<PreferenceInt>("IconYPos").Get();
-            int xPos = Mod.PManager.GetPreference<PreferenceInt>("IconXPos").Get();
+            bool horizontal = Mod.PrefManager.Get<bool>(Mod.HORIZONTAL_ID);
+            int size = Mod.PrefManager.Get<int>(Mod.ICON_SIZE_ID);
+            float yPos = Mod.PrefManager.Get<int>(Mod.ICON_Y_POS_ID)/ 100f;
+            float xPos = Mod.PrefManager.Get<int>(Mod.ICON_X_POS_ID)/ 100f;
 
 
             float sizefloat = size / 100f;
@@ -56,7 +56,7 @@ namespace MoreTwitchInteraction
             } else
             {
                 localPosition.y = (Height - 0.5f) - yPos;
-                localPosition.x = (1.2f * ((float)data.HeightIndex + 1) - xPos) - -1.2f;
+                localPosition.x = (1.2f * ((float)data.HeightIndex + 1) - xPos) + 1.2f;
             }
             Transform t = Renderer.transform;
             t.localScale = new Vector3(0.5f, 0.5f, 0.5f);

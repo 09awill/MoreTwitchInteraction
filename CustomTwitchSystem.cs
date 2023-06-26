@@ -9,8 +9,9 @@ using KitchenLib.Preferences;
 using System.Linq;
 using MoreTwitchInteraction;
 using static MoreTwitchInteraction.CustomEffects;
+using Unity.Entities.UniversalDelegates;
 
-namespace KitchenModName
+namespace KitchenMoreTwitchInteraction
 {
     internal class CustomTwitchSystem : RestaurantSystem
     {
@@ -35,7 +36,7 @@ namespace KitchenModName
             for (int i = 0; i < m_Effects.Length; i++)
             {
                 Mod.LogWarning(m_Effects[i].Name);
-                if (m_Effects[i].HasChance && Mod.PManager.GetPreference<PreferenceInt>(m_Effects[i].Name + "Chance").Get() == 0) continue;
+                if (m_Effects[i].HasChance && Mod.PrefManager.Get<int>(m_Effects[i].Name + "Chance") == 0) continue;
 
                 QueryHelper[] helpers = m_Effects[i].GetQueryHelpers();
 
@@ -57,9 +58,9 @@ namespace KitchenModName
         public void NewOrder(ChefVisitDetails pOrder)
         {
             if (!Has<SIsDayTime>()) return;
-            if (!Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get()) return;
-            if (Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get() < 1) return;
-            if (pOrder.Bits <= 0 && Mod.PManager.GetPreference<PreferenceBool>("BitsOnly").Get()) return;
+            if (!Mod.PrefManager.Get<bool>(Mod.EXTRA_OPTIONS_ENABLED_ID)) return;
+            if (Mod.PrefManager.Get<int>(Mod.INTERACTIONS_PER_DAY_ID) < 1) return;
+            if (pOrder.Bits <= 0 && Mod.PrefManager.Get<bool>(Mod.BITS_ONLY_ID)) return;
             if (!m_Options.ContainsKey(pOrder.Order)) return;
 
             CCustomOrder ce;
@@ -73,7 +74,7 @@ namespace KitchenModName
             {
                 if (m_Orders[pOrder.Name].DayOfLastOrder != 0 && m_Orders[pOrder.Name].OrderID == m_Options[pOrder.Order].EffectName) return;
                 orderedToday = m_Orders[pOrder.Name].DayOfLastOrder == DayOfThisOrder;
-                if (orderedToday && m_Orders[pOrder.Name].OrdersThisDay >= Mod.PManager.GetPreference<PreferenceInt>("InteractionsPerDay").Get()) return;
+                if (orderedToday && m_Orders[pOrder.Name].OrdersThisDay >= Mod.PrefManager.Get<int>(Mod.INTERACTIONS_PER_DAY_ID)) return;
                 ce = m_Orders[pOrder.Name];
             }
             ce.DayOfLastOrder = DayOfThisOrder;
@@ -82,7 +83,7 @@ namespace KitchenModName
             m_Orders[pOrder.Name] = ce;
             CustomEffects.CustomEffect effect = m_Effects.Where(e => e.Name == m_Options[pOrder.Order].EffectName).First();
 
-            if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PManager.GetPreference<PreferenceInt>(effect.Name + "Chance").Get() / 100f)) return;
+            if (effect.HasChance && (Random.Range(0f, 1f) > (float)Mod.PrefManager.Get<int>(effect.Name + "Chance") / 100f)) return;
             effect.Order();
         }
 
@@ -101,7 +102,7 @@ namespace KitchenModName
                 Clear<SResetCustomOrders>();
             }
 
-            if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>() || !Mod.PManager.GetPreference<PreferenceBool>("ExtraOptionsEnabled").Get())
+            if (!Has<SIsDayTime>() || !Has<STwitchOrderingActive>() || !Mod.PrefManager.Get<bool>(Mod.EXTRA_OPTIONS_ENABLED_ID))
             {
                 for (int i = 0; i < m_Effects.Length; i++)
                 {
@@ -120,7 +121,7 @@ namespace KitchenModName
                 if (m_Options.Values.Where(e => e.EffectName == m_Effects[i].Name).Any())
                 {
 
-                    bool shouldShowUI = (m_Effects[i].HasChance && Mod.PManager.GetPreference<PreferenceInt>(m_Effects[i].Name + "Chance").Get() != 0) && m_Effects[i].ShowUI && Mod.PManager.GetPreference<PreferenceBool>("ShowUI").Get();
+                    bool shouldShowUI = (m_Effects[i].HasChance && Mod.PrefManager.Get<int>(m_Effects[i].Name + "Chance") != 0) && m_Effects[i].ShowUI && Mod.PrefManager.Get<bool>(Mod.SHOW_UI_ID);
                     List<Entity> entities = options.Where(e =>
                     {
                         if (Require(e, out COption option))
@@ -182,7 +183,23 @@ namespace KitchenModName
                 Type = (ViewType)666,
                 ViewMode = ViewMode.Screen
             });
-            EntityManager.AddComponentData(entity, new CPosition(new Vector3(1f, 1f, 0f)));
+            CPosition cPos = new CPosition();
+            switch (Mod.PrefManager.Get<int>(Mod.ICON_ANCHOR_ID))
+            {
+                case 0:
+                    cPos.Position = new Vector3(1, 1, 0);
+                    break;
+                case 1:
+                    cPos.Position = new Vector3(0, 1, 0);
+                    break;
+                case 2:
+                    cPos.Position = new Vector3(0, 0, 0);
+                    break;
+                case 3:
+                    cPos.Position = new Vector3(1, 0, 0);
+                    break;
+            }
+            EntityManager.AddComponentData(entity, cPos);
             EntityManager.AddComponentData(entity, new COption(pIndex, pEffect.Name, pEffect.OrderIndex));
 
             return entity;
