@@ -8,6 +8,7 @@ using Unity.Entities;
 using UnityEngine;
 using KitchenMoreTwitchInteraction;
 using KitchenLib.Systems;
+using Unity.Entities.UniversalDelegates;
 
 namespace MoreTwitchInteraction
 {
@@ -208,7 +209,7 @@ namespace MoreTwitchInteraction
             public void Order()
             {
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                AdjustPlayerSpeed(m_EManager, (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Effect").Get() / 100, m_SpeedBoostDuration, players);
+                AdjustPlayerSpeed(m_EManager, (float)Mod.PrefManager.Get<int>(Name + "Effect") / 100, m_SpeedBoostDuration, players);
             }
             public void Update()
             {
@@ -245,7 +246,7 @@ namespace MoreTwitchInteraction
             public void Order()
             {
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                AdjustPlayerSpeed(m_EManager, (float)Mod.PManager.GetPreference<PreferenceInt>(Name + "Effect").Get() / 100, m_SlowDuration, players);
+                AdjustPlayerSpeed(m_EManager, (float)Mod.PrefManager.Get<int>(Name + "Effect") / 100, m_SlowDuration, players);
             }
             public void Update()
             {
@@ -444,7 +445,45 @@ namespace MoreTwitchInteraction
 
         }
 
+        public class ResetOrders : CustomEffect
+        {
+            private EntityQuery m_CustomerGroup;
 
+            private EntityManager m_EManager;
+            public string Name => "ResetOrders";
+            public int OrderIndex => 104;
+            public bool ShowUI => true;
+            public bool HasChance => true;
+            public QueryHelper[] GetQueryHelpers()
+            {
+                return new QueryHelper[] { new QueryHelper().All(typeof(CCustomerGroup)) };
+            }
+
+            public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries)
+            {
+                m_EManager = pEntityManager;
+                m_CustomerGroup = pQueries[0];
+            }
+            public void Order()
+            {
+                using var customers = m_CustomerGroup.ToEntityArray(Allocator.Temp);
+                foreach (var c in customers)
+                {
+                    m_EManager.AddComponent<CGroupForceChangedMind>(c);
+                }
+
+            }
+            public void Update()
+            {
+                return;
+            }
+            public void NightUpdate()
+            {
+                return;
+            }
+
+
+        }
 
     }
 }

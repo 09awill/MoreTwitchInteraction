@@ -9,9 +9,6 @@ using System.Reflection;
 using UnityEngine;
 using TMPro;
 using PreferenceSystem;
-using Sirenix.Serialization;
-using Unity.Entities;
-using static UnityEngine.Rendering.DebugUI;
 
 // Namespace should have "Kitchen" in the beginning
 namespace KitchenMoreTwitchInteraction
@@ -23,7 +20,7 @@ namespace KitchenMoreTwitchInteraction
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
         public const string MOD_NAME = "More Twitch Interaction";
-        public const string MOD_VERSION = "0.2.8";
+        public const string MOD_VERSION = "0.3.1";
         public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
@@ -49,6 +46,7 @@ namespace KitchenMoreTwitchInteraction
         public static string EXTRA_OPTIONS_ENABLED_ID = "ExtraOptionsEnabled";
         public static string SHOW_UI_ID = "ShowUI";
         public static string BITS_ONLY_ID = "BitsOnly";
+        public static string LOOP_CUSTOMERS_ID = "LoopCustomers";
         public static string SLOW_CHANCE_ID = "SlowChance";
         public static string SLOW_EFFECT_ID = "SlowEffect";
         public static string SPEED_CHANCE_ID = "SpeedBoostChance";
@@ -57,6 +55,7 @@ namespace KitchenMoreTwitchInteraction
         public static string ORDER_66_CHANCE_ID = "Order66Chance";
         public static string INTERACTIONS_PER_DAY_ID = "InteractionsPerDay";
         public static string CALL_NEXT_CUSTOMER_CHANCE_ID = "CallNextCustomerChance";
+        public static string RESET_ORDERS_CHANCE_ID = "ResetOrdersChance";
         public static string CLEAN_MESS_CHANCE_ID = "CleanMessChance";
         public static string HORIZONTAL_ID = "Horizontal";
         public static string ICON_SIZE_ID = "IconSize";
@@ -140,8 +139,6 @@ namespace KitchenMoreTwitchInteraction
 
 
 
-
-
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
@@ -181,6 +178,8 @@ namespace KitchenMoreTwitchInteraction
                     .AddOption(SHOW_UI_ID, true, new bool[] { false, true }, new string[] { "Disabled", "Enabled" })
                     .AddLabel("Interactions Per Day : ")
                     .AddOption(INTERACTIONS_PER_DAY_ID, 4, new int[] { 0, 1, 2, 3, 4, 9999 }, new string[] { "Disabled", "1", "2", "3", "4", "Infinite" })
+                    .AddLabel("Loop Customer Names Enabled : ")
+                    .AddOption(LOOP_CUSTOMERS_ID, false, new bool[] { false, true }, new string[] { "Disabled", "Enabled" })
                 .SubmenuDone()
                 .AddSubmenu("Effects", "Effects")
                     .AddLabel("Custom Effects")
@@ -207,6 +206,10 @@ namespace KitchenMoreTwitchInteraction
                     .AddSubmenu("Call Next Customer", "Call Next Customer")
                         .AddLabel("Call Next Customer Chance : ")
                         .AddOption(CALL_NEXT_CUSTOMER_CHANCE_ID, 100, Utils.GenerateIntArray("0|100|1", out strings, postfix: "%"), strings)
+                    .SubmenuDone()
+                    .AddSubmenu("Reset Orders", "Reset Orders")
+                        .AddLabel("Reset Orders Chance : ")
+                        .AddOption(RESET_ORDERS_CHANCE_ID, 50, Utils.GenerateIntArray("0|100|1", out strings, postfix: "%"), strings)
                     .SubmenuDone()
                     .AddSubmenu("Clean-up Mess", "Clean-up Mess")
                         .AddLabel("Clean-up Mess Chance : ")
@@ -303,6 +306,7 @@ namespace KitchenMoreTwitchInteraction
             PrefManager.Set(EXTRA_OPTIONS_ENABLED_ID, true);
             PrefManager.Set(SHOW_UI_ID, true);
             PrefManager.Set(BITS_ONLY_ID, false);
+            PrefManager.Set(LOOP_CUSTOMERS_ID, false);
             PrefManager.Set(SLOW_CHANCE_ID, 100);
             PrefManager.Set(SLOW_EFFECT_ID, 30);
             PrefManager.Set(SPEED_CHANCE_ID, 100);
@@ -311,6 +315,7 @@ namespace KitchenMoreTwitchInteraction
             PrefManager.Set(ORDER_66_CHANCE_ID, 5);
             PrefManager.Set(INTERACTIONS_PER_DAY_ID, 4);
             PrefManager.Set(CALL_NEXT_CUSTOMER_CHANCE_ID, 100);
+            PrefManager.Set(RESET_ORDERS_CHANCE_ID, 50);
             PrefManager.Set(CLEAN_MESS_CHANCE_ID, 15);
             PrefManager.Set(HORIZONTAL_ID, false);
             PrefManager.Set(ICON_ANCHOR_ID, 0);
