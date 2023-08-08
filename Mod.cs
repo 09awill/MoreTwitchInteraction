@@ -9,6 +9,7 @@ using System.Reflection;
 using UnityEngine;
 using TMPro;
 using PreferenceSystem;
+using Kitchen.ChefConnector.Commands;
 
 // Namespace should have "Kitchen" in the beginning
 namespace KitchenMoreTwitchInteraction

@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 using KitchenMoreTwitchInteraction;
+using static Kitchen.TwitchNameList;
+using Unity.Entities;
 
 namespace KitchenChefImprovements.Patches
 {
@@ -59,6 +61,66 @@ namespace KitchenChefImprovements.Patches
             string result = names.Dequeue();
             if (Mod.PrefManager.Get<bool>(Mod.LOOP_CUSTOMERS_ID)) names.Enqueue(result);
             return result;
+        }
+        private static List<string> UniqueNames;
+
+        [HarmonyPrefix]
+        private static bool GetNewName(ref bool __result, ref Dictionary<Entity, TwitchCustomerData> ___AssignedData, ref Queue<string> ___QueuedNames, ref bool __state, Entity e)
+        {
+            __state = false;
+            //if (___AssignedData.Keys.Contains(e) && ___AssignedData[e].Name == "") return true;
+            List<string> assignedDataNames = ___AssignedData.Values.Select(val => val.Name).ToList();
+            UniqueNames = ___QueuedNames.Where(name => !assignedDataNames.Contains(name)).ToList();
+            if (UniqueNames.Count > 0)
+            {
+                Mod.LogWarning($"Unique Name : {UniqueNames[0]}");
+            }
+            string result = "";
+            if (UniqueNames != null && UniqueNames.Count > 0)
+            {
+                result = ___QueuedNames.Dequeue();
+                if (Mod.PrefManager.Get<bool>(Mod.LOOP_CUSTOMERS_ID)) ___QueuedNames.Enqueue(result);
+                while (result != UniqueNames[0])
+                {
+                    result = ___QueuedNames.Dequeue();
+                    if (Mod.PrefManager.Get<bool>(Mod.LOOP_CUSTOMERS_ID)) ___QueuedNames.Enqueue(result);
+                }
+                ___AssignedData[e] = new TwitchCustomerData
+                {
+                    Name = result
+                };
+                Mod.LogWarning($"Unique name has been set, returning true result");
+                __result = true;
+                __state = true;
+            }
+            return true;
+        }
+
+        [HarmonyPostfix]
+        private static void GetNewName(ref bool __result, bool __state, Entity e)
+        {
+            Mod.LogWarning($"Reached Postfix, state was {__state}");
+
+            __result = __state;
+        }
+
+        [HarmonyPostfix]
+        static void OriginalLambdaBody_Postfix(ref Dictionary<Entity, TwitchCustomerData> ___AssignedData, ref Queue<string> ___QueuedNames)
+        {
+            // Log here
+            Debug.LogWarning("Queued Names : ");
+            foreach(var name in ___QueuedNames)
+            {
+                Debug.LogWarning(name);
+            }
+            Debug.LogWarning("Assigned Data : ");
+
+            foreach (TwitchCustomerData name in ___AssignedData.Values)
+            {
+                Debug.LogWarning(name.Name);
+            }
+            Debug.LogWarning($"Queued name count : {___QueuedNames.Count}");
+            Debug.LogWarning($"Assigned Data count : {___AssignedData.Count}");
         }
 
         public static MethodBase TargetMethod()
