@@ -4,12 +4,9 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using Kitchen.ChefConnector.Commands;
-using KitchenMoreTwitchInteraction;
-using KitchenLib.Preferences;
 using System.Linq;
 using MoreTwitchInteraction;
 using static MoreTwitchInteraction.CustomEffects;
-using Unity.Entities.UniversalDelegates;
 
 namespace KitchenMoreTwitchInteraction
 {
@@ -26,6 +23,7 @@ namespace KitchenMoreTwitchInteraction
             new Order66(),
             new CleanMess(),
             new SOS(),
+            new ResetOrders()
         };
 
         private Dictionary<string, CCustomOrder> m_Orders;
