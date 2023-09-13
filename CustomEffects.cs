@@ -306,7 +306,7 @@ namespace MoreTwitchInteraction
 
             public QueryHelper[] GetQueryHelpers()
             {
-                return new QueryHelper[] { new QueryHelper().All(typeof(CAppliance)).None(typeof(CImmovable), typeof(CPlayer), typeof(CCommandView), typeof(CDoesNotOccupy), typeof(CPartOfTableSet), typeof(CMess), typeof(CMessRequest)) };
+                return new QueryHelper[] { new QueryHelper().All(typeof(CAppliance)).None(typeof(CImmovable),typeof(CFireImmune), typeof(CPlayer), typeof(CCommandView), typeof(CDoesNotOccupy), typeof(CPartOfTableSet), typeof(CMess), typeof(CMessRequest)) };
             }
 
             public void Initialise(EntityManager pEntityManager, EntityQuery[] pQueries)

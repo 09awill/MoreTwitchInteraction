@@ -9,7 +9,6 @@ using System.Reflection;
 using UnityEngine;
 using TMPro;
 using PreferenceSystem;
-using Kitchen.ChefConnector.Commands;
 
 // Namespace should have "Kitchen" in the beginning
 namespace KitchenMoreTwitchInteraction
@@ -21,7 +20,7 @@ namespace KitchenMoreTwitchInteraction
         // Mod Version must follow semver notation e.g. "1.2.3"
         public const string MOD_GUID = "Madvion.PlateUp.MoreTwitchInteraction";
         public const string MOD_NAME = "More Twitch Interaction";
-        public const string MOD_VERSION = "0.3.1";
+        public const string MOD_VERSION = "0.3.5";
         public const string MOD_AUTHOR = "Madvion";
         public const string MOD_GAMEVERSION = ">=1.1.4";
         // Game version this mod is designed for in semver
@@ -90,6 +89,7 @@ namespace KitchenMoreTwitchInteraction
             //GameObject twitchView = Bundle.LoadAsset<GameObject>("TwitchOption");
             //twitchView.AddComponent<CustomTwitchOptionView>();
             //ChefClient
+            //TwitchNameList
         }
         protected override void OnUpdate()
         {
@@ -179,8 +179,10 @@ namespace KitchenMoreTwitchInteraction
                     .AddOption(SHOW_UI_ID, true, new bool[] { false, true }, new string[] { "Disabled", "Enabled" })
                     .AddLabel("Interactions Per Day : ")
                     .AddOption(INTERACTIONS_PER_DAY_ID, 4, new int[] { 0, 1, 2, 3, 4, 9999 }, new string[] { "Disabled", "1", "2", "3", "4", "Infinite" })
+                    .AddConditionalBlocker(() => true) // Hiding for now until fix is found
                     .AddLabel("Loop Customer Names Enabled : ")
                     .AddOption(LOOP_CUSTOMERS_ID, false, new bool[] { false, true }, new string[] { "Disabled", "Enabled" })
+                    .ConditionalBlockerDone()
                 .SubmenuDone()
                 .AddSubmenu("Effects", "Effects")
                     .AddLabel("Custom Effects")
@@ -246,6 +248,8 @@ namespace KitchenMoreTwitchInteraction
 
 
         }
+
+
         public void ResetIconPositions()
         {
             if (PrefManager.Get<bool>(HORIZONTAL_ID))
