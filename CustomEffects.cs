@@ -31,7 +31,7 @@ namespace MoreTwitchInteraction
                 pEntityManager.SetComponentData(p, new CSlowPlayer() { Factor = pFactor, Radius = 0.01f });
             }
         }
-        private static void CheckRemovePlayerSpeedModifiers(EntityManager pEntityManager, NativeArray<Entity> pPlayers)
+        private static void CheckRemovePlayerSpeedModifiers(EntityManager pEntityManager, NativeArray<Entity> pPlayers, bool pForceRemove = false)
         {
             foreach (var player in pPlayers)
             {
@@ -39,7 +39,7 @@ namespace MoreTwitchInteraction
                 {
                     CTakesDuration duration = pEntityManager.GetComponentData<CTakesDuration>(player);
                     //Debug.Log("Duration remaining : " + duration.Remaining);
-                    if (duration.Remaining < 0.1f)
+                    if(pForceRemove || duration.Remaining < 0.1f)
                     {
                         pEntityManager.RemoveComponent<CTakesDuration>(player);
                         pEntityManager.RemoveComponent<CSlowPlayer>(player);
@@ -219,7 +219,7 @@ namespace MoreTwitchInteraction
             public void NightUpdate()
             {
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                CheckRemovePlayerSpeedModifiers(m_EManager, players);
+                CheckRemovePlayerSpeedModifiers(m_EManager, players, true);
             }
         }
         public class Slow : CustomEffect
@@ -256,7 +256,7 @@ namespace MoreTwitchInteraction
             public void NightUpdate()
             {
                 using var players = m_PlayerQuery.ToEntityArray(Allocator.Temp);
-                CheckRemovePlayerSpeedModifiers(m_EManager, players);
+                CheckRemovePlayerSpeedModifiers(m_EManager, players, true);
             }
 
         }
