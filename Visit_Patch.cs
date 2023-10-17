@@ -18,7 +18,6 @@ namespace KitchenModName
         {
             try
             {
-                Mod.LogWarning($"Patched Handle Update : {update.Data}");
                 if (update.Type == "VISIT_ADD_NAME")
                 {
                     ChefVisitUpdate chefVisitUpdate = JsonUtility.FromJson<ChefVisitUpdate>(update.Data);
